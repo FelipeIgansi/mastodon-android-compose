@@ -1,18 +1,14 @@
-package org.joinmastodon.android.api;
+package org.joinmastodon.android.api
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+class MastodonDetailedErrorResponse(
+    error: String?,
+    httpStatus: Int,
+    exception: Throwable?
+) : MastodonErrorResponse(error, httpStatus, exception) {
+    var detailedErrors: Map<String, List<FieldError>>? = emptyMap()
 
-public class MastodonDetailedErrorResponse extends MastodonErrorResponse{
-	public Map<String, List<FieldError>> detailedErrors;
-
-	public MastodonDetailedErrorResponse(String error, int httpStatus, Throwable exception){
-		super(error, httpStatus, exception);
-	}
-
-	public static class FieldError{
-		public String error;
-		public String description;
-	}
+    class FieldError {
+        var error: String? = null
+        var description: String? = null
+    }
 }
