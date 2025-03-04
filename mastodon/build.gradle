@@ -1,6 +1,7 @@
 plugins {
 	id 'com.android.application'
 	id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
+	id 'org.jetbrains.kotlin.android'
 }
 
 android {
@@ -78,6 +79,18 @@ android {
 		includeInBundle false
 	}
 	namespace 'org.joinmastodon.android'
+	kotlinOptions {
+		jvmTarget = '17'
+	}
+}
+//I had to add a condition to ignore a dependency, as there was a duplication conflict with the ktx core dependency
+configurations.all {
+	exclude group: 'me.grishka.litex', module: 'collection'
+	exclude group: 'me.grishka.litex', module: 'concurrent'
+	resolutionStrategy {
+		force 'androidx.collection:collection:1.1.0'
+		force 'androidx.concurrent:concurrent-futures:1.1.0'
+	}
 }
 
 dependencies {
@@ -98,6 +111,7 @@ dependencies {
 	implementation 'com.google.zxing:core:3.5.3'
 	implementation 'org.microg:safe-parcel:1.5.0'
 	implementation 'org.parceler:parceler-api:1.1.12'
+	implementation 'androidx.core:core-ktx:1.13.0'
 	annotationProcessor 'org.parceler:parceler:1.1.12'
 	coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
 
