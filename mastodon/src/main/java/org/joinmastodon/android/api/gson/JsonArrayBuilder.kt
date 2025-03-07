@@ -1,42 +1,22 @@
-package org.joinmastodon.android.api.gson;
+package org.joinmastodon.android.api.gson
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
+import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 
-public class JsonArrayBuilder{
-	private JsonArray arr=new JsonArray();
+class JsonArrayBuilder {
+  private val arr = JsonArray()
 
-	public JsonArrayBuilder add(JsonElement el){
-		arr.add(el);
-		return this;
-	}
+  fun add(element: JsonElement): JsonArrayBuilder = apply { arr.add(element) }
 
-	public JsonArrayBuilder add(String el){
-		arr.add(el);
-		return this;
-	}
+  fun add(element: String): JsonArrayBuilder = apply { arr.add(element) }
 
-	public JsonArrayBuilder add(Number el){
-		arr.add(el);
-		return this;
-	}
+  fun add(element: Number): JsonArrayBuilder = apply { arr.add(element) }
 
-	public JsonArrayBuilder add(boolean el){
-		arr.add(el);
-		return this;
-	}
+  fun add(element: Boolean): JsonArrayBuilder = apply { arr.add(element) }
 
-	public JsonArrayBuilder add(JsonObjectBuilder el){
-		arr.add(el.build());
-		return this;
-	}
+  fun add(element: JsonObjectBuilder): JsonArrayBuilder = apply { arr.add(element.build()) }
 
-	public JsonArrayBuilder add(JsonArrayBuilder el){
-		arr.add(el.build());
-		return this;
-	}
+  fun add(element: JsonArrayBuilder): JsonArrayBuilder = apply { arr.add(element.build()) }
 
-	public JsonArray build(){
-		return arr;
-	}
+  fun build(): JsonArray = arr
 }
