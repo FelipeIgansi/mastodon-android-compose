@@ -1,42 +1,22 @@
-package org.joinmastodon.android.api.gson;
+package org.joinmastodon.android.api.gson
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 
-public class JsonObjectBuilder{
-	private JsonObject obj=new JsonObject();
+class JsonObjectBuilder {
+  private val obj = JsonObject()
 
-	public JsonObjectBuilder add(String key, JsonElement el){
-		obj.add(key, el);
-		return this;
-	}
+  fun add(key: String, el: JsonElement): JsonObjectBuilder = apply { obj.add(key, el) }
 
-	public JsonObjectBuilder add(String key, String el){
-		obj.addProperty(key, el);
-		return this;
-	}
+  fun add(key: String, el: String): JsonObjectBuilder = apply { obj.addProperty(key, el) }
 
-	public JsonObjectBuilder add(String key, Number el){
-		obj.addProperty(key, el);
-		return this;
-	}
+  fun add(key: String, el: Number): JsonObjectBuilder = apply { obj.addProperty(key, el) }
 
-	public JsonObjectBuilder add(String key, boolean el){
-		obj.addProperty(key, el);
-		return this;
-	}
+  fun add(key: String, el: Boolean): JsonObjectBuilder = apply { obj.addProperty(key, el) }
 
-	public JsonObjectBuilder add(String key, JsonObjectBuilder el){
-		obj.add(key, el.build());
-		return this;
-	}
+  fun add(key: String, el: JsonObjectBuilder): JsonObjectBuilder = apply { obj.add(key, el.build()) }
 
-	public JsonObjectBuilder add(String key, JsonArrayBuilder el){
-		obj.add(key, el.build());
-		return this;
-	}
+  fun add(key: String, el: JsonArrayBuilder): JsonObjectBuilder = apply { obj.add(key, el.build()) }
 
-	public JsonObject build(){
-		return obj;
-	}
+  fun build(): JsonObject = obj
 }
