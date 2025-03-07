@@ -1,20 +1,13 @@
-package org.joinmastodon.android.api;
+package org.joinmastodon.android.api
 
-import java.io.IOException;
+import java.io.IOException
 
-public class ObjectValidationException extends IOException{
-	public ObjectValidationException(){
-	}
+class ObjectValidationException : IOException {
+    constructor() : super()
 
-	public ObjectValidationException(String message){
-		super(message);
-	}
+    constructor(message: String?) : super(message)
 
-	public ObjectValidationException(String message, Throwable cause){
-		super(message, cause);
-	}
+    constructor(message: String?, cause: Throwable?) : super(message, cause)
 
-	public ObjectValidationException(Throwable cause){
-		super(cause);
-	}
+    constructor(cause: Throwable?) : super(cause)
 }
