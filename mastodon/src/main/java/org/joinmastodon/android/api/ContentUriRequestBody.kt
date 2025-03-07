@@ -1,36 +1,38 @@
-package org.joinmastodon.android.api;
+package org.joinmastodon.android.api
 
-import android.database.Cursor;
-import android.net.Uri;
-import android.provider.OpenableColumns;
+import android.net.Uri
+import android.provider.OpenableColumns
+import okhttp3.MediaType
+import okio.Okio
+import okio.Source
+import org.joinmastodon.android.MastodonApp
+import java.io.IOException
 
-import org.joinmastodon.android.MastodonApp;
+internal class ContentUriRequestBody(
+  private val uri: Uri,
+  progressListener: ProgressListener?
+) : CountingRequestBody(progressListener) {
+  init {
+    MastodonApp.context.contentResolver
+      .query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)
+      .use { cursor ->
+        cursor?.use {
+          if (it.moveToFirst()) {
+            length = it.getLong(0)
+          }
+        }
+      }
+  }
 
-import java.io.IOException;
+  override fun contentType(): MediaType? {
+    val mimeType = MastodonApp.context.contentResolver.getType(uri) ?: return null
+    return MediaType.parse(mimeType)
+  }
 
-import okhttp3.MediaType;
-import okio.Okio;
-import okio.Source;
-
-public class ContentUriRequestBody extends CountingRequestBody{
-	private final Uri uri;
-
-	public ContentUriRequestBody(Uri uri, ProgressListener progressListener){
-		super(progressListener);
-		this.uri=uri;
-		try(Cursor cursor=MastodonApp.context.getContentResolver().query(uri, new String[]{OpenableColumns.SIZE}, null, null, null)){
-			cursor.moveToFirst();
-			length=cursor.getInt(0);
-		}
-	}
-
-	@Override
-	public MediaType contentType(){
-		return MediaType.get(MastodonApp.context.getContentResolver().getType(uri));
-	}
-
-	@Override
-	protected Source openSource() throws IOException{
-		return Okio.source(MastodonApp.context.getContentResolver().openInputStream(uri));
-	}
+  @Throws(IOException::class)
+  override fun openSource(): Source {
+    return MastodonApp.context.contentResolver.openInputStream(uri)
+      ?.use { Okio.source(it) }
+      ?: throw IOException("Unable to open InputStream for URI: $uri")
+  }
 }
