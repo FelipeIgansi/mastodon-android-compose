@@ -1,34 +1,30 @@
-package org.joinmastodon.android.api;
+package org.joinmastodon.android.api
 
-import android.os.SystemClock;
+import android.os.SystemClock
+import okio.Buffer
+import okio.ForwardingSink
+import okio.Sink
+import org.joinmastodon.android.ui.utils.UiUtils
+import java.io.IOException
 
-import org.joinmastodon.android.ui.utils.UiUtils;
+internal class CountingSink(
+    private val length: Long,
+    private val progressListener: ProgressListener,
+    delegate: Sink
+) : ForwardingSink(delegate) {
+    private var bytesWritten: Long = 0
+    private var lastCallbackTime: Long = 0
 
-import java.io.IOException;
+    @Throws(IOException::class)
+    override fun write(source: Buffer, byteCount: Long) {
+        super.write(source, byteCount)
+        bytesWritten += byteCount
 
-import okio.Buffer;
-import okio.ForwardingSink;
-import okio.Sink;
-
-class CountingSink extends ForwardingSink{
-	private long bytesWritten=0;
-	private long lastCallbackTime;
-	private final long length;
-	private final ProgressListener progressListener;
-
-	public CountingSink(long length, ProgressListener progressListener, Sink delegate){
-		super(delegate);
-		this.length=length;
-		this.progressListener=progressListener;
-	}
-
-	@Override
-	public void write(Buffer source, long byteCount) throws IOException{
-		super.write(source, byteCount);
-		bytesWritten+=byteCount;
-		if(SystemClock.uptimeMillis()-lastCallbackTime>=100L || bytesWritten==length){
-			lastCallbackTime=SystemClock.uptimeMillis();
-			UiUtils.runOnUiThread(()->progressListener.onProgress(bytesWritten, length));
-		}
-	}
+        if (SystemClock.uptimeMillis() - lastCallbackTime >= 100L ||
+            bytesWritten == length
+        ) {
+            lastCallbackTime = SystemClock.uptimeMillis()
+            UiUtils.runOnUiThread(Runnable { progressListener.onProgress(bytesWritten, length) })
+        }
+    }
 }
