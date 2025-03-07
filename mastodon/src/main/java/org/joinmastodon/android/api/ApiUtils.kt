@@ -1,24 +1,21 @@
-package org.joinmastodon.android.api;
+package org.joinmastodon.android.api
 
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.SerializedName
+import java.util.EnumSet
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class ApiUtils{
-	private ApiUtils(){
-		//no instance
-	}
-
-	public static <E extends Enum<E>> List<String> enumSetToStrings(EnumSet<E> e, Class<E> cls){
-		return e.stream().map(ev->{
-			try{
-				SerializedName annotation=cls.getField(ev.name()).getAnnotation(SerializedName.class);
-				return annotation!=null ? annotation.value() : ev.name().toLowerCase();
-			}catch(NoSuchFieldException x){
-				throw new RuntimeException(x);
-			}
-		}).collect(Collectors.toList());
-	}
+object ApiUtils {
+    @JvmStatic
+    fun <E : Enum<E>> enumSetToStrings(
+        e: EnumSet<E>,
+        cls: Class<E>
+    ): List<String> {
+        return e.map { ev ->
+            try {
+                val annotation = cls.getField(ev.name).getAnnotation(SerializedName::class.java)
+                annotation?.value ?: ev.name.lowercase()
+            } catch (x: NoSuchFieldException) {
+                throw RuntimeException(x)
+            }
+        }
+    }
 }
