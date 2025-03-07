@@ -1,9 +1,6 @@
-package org.joinmastodon.android.api;
+package org.joinmastodon.android.api
 
-import com.google.gson.reflect.TypeToken;
-
-public abstract class ResultlessMastodonAPIRequest extends MastodonAPIRequest<Void>{
-	public ResultlessMastodonAPIRequest(HttpMethod method, String path){
-		super(method, path, (Class<Void>)null);
-	}
-}
+abstract class ResultlessMastodonAPIRequest(
+    method: HttpMethod,
+    path: String
+) : MastodonAPIRequest<Unit>(method, path, Unit::class.java)
