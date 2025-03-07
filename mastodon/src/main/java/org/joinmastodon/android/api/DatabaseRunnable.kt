@@ -1,10 +1,9 @@
-package org.joinmastodon.android.api;
+package org.joinmastodon.android.api
 
-import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabase
+import java.io.IOException
 
-import java.io.IOException;
-
-@FunctionalInterface
-public interface DatabaseRunnable{
-	void run(SQLiteDatabase db) throws IOException;
+fun interface DatabaseRunnable {
+    @Throws(IOException::class)
+    fun run(db: SQLiteDatabase)
 }
