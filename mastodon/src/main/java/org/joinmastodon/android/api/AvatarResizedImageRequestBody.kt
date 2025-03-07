@@ -1,39 +1,35 @@
-package org.joinmastodon.android.api;
+package org.joinmastodon.android.api
 
-import android.graphics.Rect;
-import android.net.Uri;
+import android.graphics.Rect
+import android.net.Uri
+import kotlin.math.min
+import kotlin.math.roundToInt
 
-import java.io.IOException;
+class AvatarResizedImageRequestBody(
+  uri: Uri,
+  progressListener: ProgressListener?
+) : ResizedImageRequestBody(uri, 0, progressListener) {
 
-public class AvatarResizedImageRequestBody extends ResizedImageRequestBody{
-	public AvatarResizedImageRequestBody(Uri uri, ProgressListener progressListener) throws IOException{
-		super(uri, 0, progressListener);
-	}
+  override fun getTargetSize(srcWidth: Int, srcHeight: Int): IntArray? {
+    val factor = 400f / min(srcWidth, srcHeight)
+    return intArrayOf((srcWidth * factor).roundToInt(), (srcHeight * factor).roundToInt())
+  }
 
-	@Override
-	protected int[] getTargetSize(int srcWidth, int srcHeight){
-		float factor=400f/Math.min(srcWidth, srcHeight);
-		return new int[]{Math.round(srcWidth*factor), Math.round(srcHeight*factor)};
-	}
+  override fun needResize(srcWidth: Int, srcHeight: Int) = srcHeight > 400 || srcWidth != srcHeight
 
-	@Override
-	protected boolean needResize(int srcWidth, int srcHeight){
-		return srcHeight>400 || srcWidth!=srcHeight;
-	}
 
-	@Override
-	protected boolean needCrop(int srcWidth, int srcHeight){
-		return srcWidth!=srcHeight;
-	}
+  override fun needCrop(srcWidth: Int, srcHeight: Int) = srcWidth != srcHeight
 
-	@Override
-	protected Rect getCropBounds(int srcWidth, int srcHeight){
-		Rect rect=new Rect();
-		if(srcWidth>srcHeight){
-			rect.set(srcWidth/2-srcHeight/2, 0, srcWidth/2-srcHeight/2+srcHeight, srcHeight);
-		}else{
-			rect.set(0, srcHeight/2-srcWidth/2, srcWidth, srcHeight/2-srcWidth/2+srcWidth);
-		}
-		return rect;
-	}
+
+  override fun getCropBounds(srcWidth: Int, srcHeight: Int): Rect {
+    val halfSrcWidth = srcWidth / 2
+    val halfSrcHeight = srcHeight / 2
+    return if (srcWidth > srcHeight) {
+      val differenceHalfWidthHeight = halfSrcWidth - halfSrcHeight
+      Rect(differenceHalfWidthHeight, 0, differenceHalfWidthHeight + srcHeight, srcHeight)
+    } else {
+      val differenceHalfHeightWidth = halfSrcHeight - halfSrcWidth
+      Rect(0, differenceHalfHeightWidth, srcWidth, differenceHalfHeightWidth + srcWidth)
+    }
+  }
 }
