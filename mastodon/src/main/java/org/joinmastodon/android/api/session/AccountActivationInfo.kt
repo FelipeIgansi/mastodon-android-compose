@@ -1,15 +1,12 @@
-package org.joinmastodon.android.api.session;
+package org.joinmastodon.android.api.session
 
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.SerializedName
 
-public class AccountActivationInfo{
-	@SerializedName(value="email", alternate="a")
-	public String email;
-	@SerializedName(value="last_email_confirmation_resend", alternate="b")
-	public long lastEmailConfirmationResend;
-
-	public AccountActivationInfo(String email, long lastEmailConfirmationResend){
-		this.email=email;
-		this.lastEmailConfirmationResend=lastEmailConfirmationResend;
-	}
-}
+data class AccountActivationInfo(
+	@JvmField //Used only to communicate with Java code, if it is calling this object.
+  @field:SerializedName(value = "email", alternate = ["a"])
+  var email: String,
+  @JvmField //Used only to communicate with Java code, if it is calling this object.
+  @field:SerializedName(value = "last_email_confirmation_resend", alternate = ["b"])
+  var lastEmailConfirmationResend: Long
+)
