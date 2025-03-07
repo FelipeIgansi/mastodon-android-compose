@@ -1,28 +1,17 @@
-package org.joinmastodon.android.api.session;
+package org.joinmastodon.android.api.session
 
-import android.content.SharedPreferences;
+import android.content.SharedPreferences
+import androidx.core.content.edit
 
-public class AccountLocalPreferences{
-	private final SharedPreferences prefs;
+class AccountLocalPreferences(private val prefs: SharedPreferences) {
+  @JvmField //Used only to communicate with Java code, if it is calling this object.
+  var serverSideFiltersSupported: Boolean = prefs.getBoolean("serverSideFilters", false)
 
-	public boolean serverSideFiltersSupported;
+  var notificationsPauseEndTime: Long
+    get() = prefs.getLong("notificationsPauseTime", 0L)
+    set(time) { prefs.edit { putLong("notificationsPauseTime", time) } }
 
-	public AccountLocalPreferences(SharedPreferences prefs){
-		this.prefs=prefs;
-		serverSideFiltersSupported=prefs.getBoolean("serverSideFilters", false);
-	}
-
-	public long getNotificationsPauseEndTime(){
-		return prefs.getLong("notificationsPauseTime", 0L);
-	}
-
-	public void setNotificationsPauseEndTime(long time){
-		prefs.edit().putLong("notificationsPauseTime", time).apply();
-	}
-
-	public void save(){
-		prefs.edit()
-				.putBoolean("serverSideFilters", serverSideFiltersSupported)
-				.apply();
-	}
+  fun save() {
+    prefs.edit { putBoolean("serverSideFilters", serverSideFiltersSupported) }
+  }
 }
