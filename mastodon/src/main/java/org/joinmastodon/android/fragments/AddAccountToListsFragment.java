@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import androidx.recyclerview.widget.RecyclerView;
+
+import kotlin.Unit;
 import me.grishka.appkit.api.Callback;
 import me.grishka.appkit.api.ErrorResponse;
 import me.grishka.appkit.api.SimpleCallback;
@@ -93,7 +95,7 @@ public class AddAccountToListsFragment extends BaseSettingsFragment<FollowList>{
 		ResultlessMastodonAPIRequest req=add ? new AddAccountsToList(item.parentObject.id, Set.of(account.id)) : new RemoveAccountsFromList(item.parentObject.id, Set.of(account.id));
 		req.setCallback(new Callback<>(){
 					@Override
-					public void onSuccess(Void result){
+					public void onSuccess(Unit result){
 						item.checked=add;
 						rebindItem(item);
 						if(add){

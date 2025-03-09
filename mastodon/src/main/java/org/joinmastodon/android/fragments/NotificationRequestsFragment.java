@@ -32,6 +32,7 @@ import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import kotlin.Unit;
 import me.grishka.appkit.Nav;
 import me.grishka.appkit.api.Callback;
 import me.grishka.appkit.api.ErrorResponse;
@@ -229,7 +230,7 @@ public class NotificationRequestsFragment extends MastodonRecyclerFragment<Notif
 			new RespondToNotificationRequest(item.id, accept)
 					.setCallback(new Callback<>(){
 						@Override
-						public void onSuccess(Void result){
+						public void onSuccess(Unit result){
 							int pos=data.indexOf(item);
 							data.remove(pos);
 							adapter.notifyItemRemoved(pos);

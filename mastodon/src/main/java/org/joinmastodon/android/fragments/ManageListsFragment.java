@@ -29,6 +29,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import kotlin.Unit;
 import me.grishka.appkit.Nav;
 import me.grishka.appkit.api.Callback;
 import me.grishka.appkit.api.ErrorResponse;
@@ -129,7 +130,7 @@ public class ManageListsFragment extends BaseSettingsFragment<FollowList> implem
 		new DeleteList(list.id)
 				.setCallback(new Callback<>(){
 					@Override
-					public void onSuccess(Void result){
+					public void onSuccess(Unit result){
 						for(int i=0;i<data.size();i++){
 							if(data.get(i).parentObject==list){
 								data.remove(i);

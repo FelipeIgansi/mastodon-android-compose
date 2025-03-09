@@ -27,6 +27,8 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import kotlin.Unit;
 import me.grishka.appkit.api.Callback;
 import me.grishka.appkit.api.ErrorResponse;
 import me.grishka.appkit.utils.MergeRecyclerAdapter;
@@ -130,7 +132,7 @@ public class AccountNotificationsListFragment extends BaseNotificationsListFragm
 		new RespondToNotificationRequest(requestID, allowed)
 				.setCallback(new Callback<>(){
 					@Override
-					public void onSuccess(Void result){
+					public void onSuccess(Unit result){
 						choiceMade=true;
 						invalidateOptionsMenu();
 						E.post(new NotificationRequestRespondedEvent(accountID, requestID));

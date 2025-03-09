@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import kotlin.Unit;
 import me.grishka.appkit.Nav;
 import me.grishka.appkit.api.Callback;
 import me.grishka.appkit.api.ErrorResponse;
@@ -212,7 +213,7 @@ public class CreateListAddMembersFragment extends BaseAccountListFragment implem
 		new AddAccountsToList(followList.id, Set.of(account.account.id))
 				.setCallback(new Callback<>(){
 					@Override
-					public void onSuccess(Void result){
+					public void onSuccess(Unit result){
 						accountIDsInList.add(account.account.id);
 						if(onDone!=null)
 							onDone.run();
@@ -242,7 +243,7 @@ public class CreateListAddMembersFragment extends BaseAccountListFragment implem
 		new RemoveAccountsFromList(followList.id, Set.of(account.account.id))
 				.setCallback(new Callback<>(){
 					@Override
-					public void onSuccess(Void result){
+					public void onSuccess(Unit result){
 						accountIDsInList.remove(account.account.id);
 						if(onDone!=null)
 							onDone.run();

@@ -42,6 +42,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import androidx.recyclerview.widget.RecyclerView;
+import kotlin.Unit;
 import me.grishka.appkit.Nav;
 import me.grishka.appkit.api.Callback;
 import me.grishka.appkit.api.ErrorResponse;
@@ -290,7 +291,7 @@ public class EditFilterFragment extends BaseSettingsFragment<Void>{
 		new DeleteFilter(filter.id)
 				.setCallback(new Callback<>(){
 					@Override
-					public void onSuccess(Void result){
+					public void onSuccess(Unit result){
 						E.post(new SettingsFilterDeletedEvent(accountID, filter.id));
 						Nav.finish(EditFilterFragment.this);
 					}

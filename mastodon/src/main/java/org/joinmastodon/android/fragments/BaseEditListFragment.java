@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.recyclerview.widget.RecyclerView;
+
+import kotlin.Unit;
 import me.grishka.appkit.Nav;
 import me.grishka.appkit.api.APIRequest;
 import me.grishka.appkit.api.Callback;
@@ -117,7 +119,7 @@ public abstract class BaseEditListFragment extends BaseSettingsFragment<Void>{
 		new DeleteList(followList.id)
 				.setCallback(new Callback<>(){
 					@Override
-					public void onSuccess(Void result){
+					public void onSuccess(Unit result){
 						AccountSessionManager.get(accountID).getCacheController().deleteList(followList.id);
 						E.post(new ListDeletedEvent(accountID, followList.id));
 						Nav.finish(BaseEditListFragment.this);

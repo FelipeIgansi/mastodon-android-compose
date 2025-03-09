@@ -193,7 +193,7 @@ public class MastodonAPIController{
 											}
 											details.put(key, fieldErrors);
 										}
-										err.detailedErrors=details;
+										err.setDetailedErrors(details);
 										req.onError(err);
 									}else{
 										req.onError(error.get("error").getAsString(), response.code(), null);

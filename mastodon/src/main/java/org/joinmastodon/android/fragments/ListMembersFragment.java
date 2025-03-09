@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import kotlin.Unit;
 import me.grishka.appkit.Nav;
 import me.grishka.appkit.api.Callback;
 import me.grishka.appkit.api.ErrorResponse;
@@ -62,7 +63,7 @@ public class ListMembersFragment extends PaginatedAccountListFragment implements
 	private WindowInsets lastInsets;
 	private HashSet<String> accountIDsInList=new HashSet<>();
 	private boolean dismissingSearchFragment;
-	private Runnable searchFragmentDismisser=this::dismissSearchFragment;;
+	private Runnable searchFragmentDismisser=this::dismissSearchFragment;
 	private Runnable actionModeDismisser=()->actionMode.finish();
 
 	public ListMembersFragment(){
@@ -310,7 +311,7 @@ public class ListMembersFragment extends PaginatedAccountListFragment implements
 		new RemoveAccountsFromList(followList.id, ids)
 				.setCallback(new Callback<>(){
 					@Override
-					public void onSuccess(Void result){
+					public void onSuccess(Unit result){
 						if(onDone!=null)
 							onDone.run();
 						if(inSelectionMode)
@@ -332,7 +333,7 @@ public class ListMembersFragment extends PaginatedAccountListFragment implements
 		new AddAccountsToList(followList.id, accounts.stream().map(a->a.id).collect(Collectors.toSet()))
 				.setCallback(new Callback<>(){
 					@Override
-					public void onSuccess(Void result){
+					public void onSuccess(Unit result){
 						if(onDone!=null)
 							onDone.run();
 						for(Account acc:accounts){

@@ -8,7 +8,9 @@ class MastodonDetailedErrorResponse(
     var detailedErrors: Map<String, List<FieldError>>? = emptyMap()
 
     class FieldError {
-        var error: String? = null
+		@JvmField
+		var error: String? = null
+		@JvmField
         var description: String? = null
     }
 }

@@ -252,7 +252,7 @@ public class SignupFragment extends ToolbarFragment{
 					@Override
 					public void onError(ErrorResponse error){
 						if(error instanceof MastodonDetailedErrorResponse derr){
-							Map<String, List<MastodonDetailedErrorResponse.FieldError>> fieldErrors=derr.detailedErrors;
+							Map<String, List<MastodonDetailedErrorResponse.FieldError>> fieldErrors=derr.getDetailedErrors();
 							boolean first=true;
 							boolean anyFieldsSkipped=false;
 							for(String fieldName:fieldErrors.keySet()){
