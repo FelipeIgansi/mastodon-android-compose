@@ -1,15 +1,20 @@
-package org.joinmastodon.android.api.requests.accounts;
+package org.joinmastodon.android.api.requests.accounts
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
+import org.joinmastodon.android.api.MastodonAPIRequest
 
-public class GetDomainBlockPreview extends MastodonAPIRequest<GetDomainBlockPreview.Response>{
-	public GetDomainBlockPreview(String domain){
-		super(HttpMethod.GET, "/domain_blocks/preview", Response.class);
-		addQueryParameter("domain", domain);
-	}
+class GetDomainBlockPreview(domain: String) : MastodonAPIRequest<GetDomainBlockPreview.Response>(
+  HttpMethod.GET,
+  "/domain_blocks/preview",
+  Response::class.java
+) {
+  init {
+    addQueryParameter("domain", domain)
+  }
 
-	public static class Response{
-		public int followingCount;
-		public int followersCount;
-	}
+  class Response {
+    @JvmField
+    var followingCount: Int = 0
+    @JvmField
+    var followersCount: Int = 0
+  }
 }
