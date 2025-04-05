@@ -1,10 +1,10 @@
-package org.joinmastodon.android.api.requests.accounts;
+package org.joinmastodon.android.api.requests.accounts
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Preferences;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Preferences
 
-public class GetPreferences extends MastodonAPIRequest<Preferences> {
-    public GetPreferences(){
-        super(HttpMethod.GET, "/preferences", Preferences.class);
-    }
-}
+class GetPreferences : MastodonAPIRequest<Preferences>(
+  HttpMethod.GET,
+  "/preferences",
+  Preferences::class.java
+)
