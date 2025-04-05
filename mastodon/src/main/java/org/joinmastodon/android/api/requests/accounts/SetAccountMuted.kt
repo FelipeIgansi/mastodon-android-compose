@@ -1,11 +1,18 @@
-package org.joinmastodon.android.api.requests.accounts;
+package org.joinmastodon.android.api.requests.accounts
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Relationship;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Relationship
 
-public class SetAccountMuted extends MastodonAPIRequest<Relationship>{
-	public SetAccountMuted(String id, boolean muted){
-		super(HttpMethod.POST, "/accounts/"+id+"/"+(muted ? "mute" : "unmute"), Relationship.class);
-		setRequestBody(new Object());
-	}
+class SetAccountMuted(
+  id: String,
+  muted: Boolean
+) :
+  MastodonAPIRequest<Relationship>(
+    HttpMethod.POST,
+    "/accounts/$id/${if (muted) "mute" else "unmute"}",
+    Relationship::class.java
+  ) {
+  init {
+    setRequestBody(Any())
+  }
 }
