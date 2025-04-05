@@ -1,26 +1,37 @@
-package org.joinmastodon.android.api.requests.accounts;
+package org.joinmastodon.android.api.requests.accounts
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Token;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Token
 
-public class RegisterAccount extends MastodonAPIRequest<Token>{
-	public RegisterAccount(String username, String email, String password, String locale, String reason, String timezone, String inviteCode){
-		super(HttpMethod.POST, "/accounts", Token.class);
-		setRequestBody(new Body(username, email, password, locale, reason, timezone, inviteCode));
-	}
+class RegisterAccount(
+  username: String,
+  email: String,
+  password: String,
+  locale: String,
+  reason: String,
+  timezone: String,
+  inviteCode: String
+) :
+  MastodonAPIRequest<Token>(
+    HttpMethod.POST,
+    "/accounts",
+    Token::class.java
+  ) {
 
-	private static class Body{
-		public String username, email, password, locale, reason, timeZone, inviteCode;
-		public boolean agreement=true;
+  init {
+    setRequestBody(
+      Body(username, email, password, locale, reason, timezone, inviteCode)
+    )
+  }
 
-		public Body(String username, String email, String password, String locale, String reason, String timeZone, String inviteCode){
-			this.username=username;
-			this.email=email;
-			this.password=password;
-			this.locale=locale;
-			this.reason=reason;
-			this.timeZone=timeZone;
-			this.inviteCode=inviteCode;
-		}
-	}
+  private data class Body(
+    val username: String,
+    val email: String,
+    val password: String,
+    val locale: String,
+    val reason: String,
+    val timeZone: String,
+    val inviteCode: String,
+    val agreement: Boolean = true // valor padrão mantido
+  )
 }
