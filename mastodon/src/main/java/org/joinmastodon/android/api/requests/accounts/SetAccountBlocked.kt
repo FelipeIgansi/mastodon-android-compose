@@ -1,11 +1,18 @@
-package org.joinmastodon.android.api.requests.accounts;
+package org.joinmastodon.android.api.requests.accounts
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Relationship;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Relationship
 
-public class SetAccountBlocked extends MastodonAPIRequest<Relationship>{
-	public SetAccountBlocked(String id, boolean blocked){
-		super(HttpMethod.POST, "/accounts/"+id+"/"+(blocked ? "block" : "unblock"), Relationship.class);
-		setRequestBody(new Object());
-	}
+class SetAccountBlocked(
+  id: String,
+  blocked: Boolean
+) :
+  MastodonAPIRequest<Relationship>(
+    HttpMethod.POST,
+    "/accounts/$id/${ if (blocked) "block" else "unblock" }",
+    Relationship::class.java
+  ) {
+  init {
+    setRequestBody(Any())
+  }
 }
