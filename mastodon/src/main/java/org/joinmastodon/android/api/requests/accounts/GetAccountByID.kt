@@ -1,10 +1,10 @@
-package org.joinmastodon.android.api.requests.accounts;
+package org.joinmastodon.android.api.requests.accounts
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Account;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Account
 
-public class GetAccountByID extends MastodonAPIRequest<Account>{
-	public GetAccountByID(String id){
-		super(HttpMethod.GET, "/accounts/"+id, Account.class);
-	}
-}
+class GetAccountByID(id: String) : MastodonAPIRequest<Account>(
+  HttpMethod.GET,
+  "/accounts/$id",
+  Account::class.java
+)
