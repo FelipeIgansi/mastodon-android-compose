@@ -1,23 +1,23 @@
-package org.joinmastodon.android.api.requests.accounts;
+package org.joinmastodon.android.api.requests.accounts
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Relationship;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Relationship
 
-public class SetAccountFollowed extends MastodonAPIRequest<Relationship>{
-	public SetAccountFollowed(String id, boolean followed, boolean showReblogs, boolean notify){
-		super(HttpMethod.POST, "/accounts/"+id+"/"+(followed ? "follow" : "unfollow"), Relationship.class);
-		if(followed)
-			setRequestBody(new Request(showReblogs, notify));
-		else
-			setRequestBody(new Object());
-	}
+class SetAccountFollowed(
+  id: String,
+  followed: Boolean,
+  showReblogs: Boolean,
+  notify: Boolean
+) :
+  MastodonAPIRequest<Relationship>(
+    HttpMethod.POST,
+    "/accounts/$id/${ if (followed) "follow" else "unfollow" }",
+    Relationship::class.java
+  ) {
+  init {
+    if (followed) setRequestBody(Request(showReblogs, notify))
+    else setRequestBody(Any())
+  }
 
-	private static class Request{
-		public Boolean reblogs, notify;
-
-		public Request(Boolean reblogs, Boolean notify){
-			this.reblogs=reblogs;
-			this.notify=notify;
-		}
-	}
+  private data class Request(val reblogs: Boolean, val notify: Boolean)
 }
