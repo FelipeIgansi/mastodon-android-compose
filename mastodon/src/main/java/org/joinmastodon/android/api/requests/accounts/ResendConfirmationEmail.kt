@@ -1,19 +1,18 @@
-package org.joinmastodon.android.api.requests.accounts;
+package org.joinmastodon.android.api.requests.accounts
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
+import org.joinmastodon.android.api.MastodonAPIRequest
 
-public class ResendConfirmationEmail extends MastodonAPIRequest<Object>{
-	public ResendConfirmationEmail(String email){
-		super(HttpMethod.POST, "/emails/confirmations", Object.class);
-//		setRequestBody(new Body(email));
-		setRequestBody(new Object());
-	}
+class ResendConfirmationEmail(email: String?) :
+  MastodonAPIRequest<Any>(
+    HttpMethod.POST,
+    "/emails/confirmations",
+    Any::class.java
+  ) {
 
-	private static class Body{
-		public String email;
+  init {
+//  setRequestBody(Body(email))
+    setRequestBody(Any())
+  }
 
-		public Body(String email){
-			this.email=email;
-		}
-	}
+  private data class Body(val email: String?)
 }
