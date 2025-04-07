@@ -1,40 +1,56 @@
-package org.joinmastodon.android.api.requests.catalog;
+package org.joinmastodon.android.api.requests.catalog
 
-import android.net.Uri;
-import android.text.TextUtils;
+import android.net.Uri
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.donations.DonationCampaign
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.donations.DonationCampaign;
 
-public class GetDonationCampaigns extends MastodonAPIRequest<DonationCampaign>{
-	private final String locale, seed, source;
-	private boolean staging;
+class GetDonationCampaigns(
+  private val locale: String,
+  private val seed: String,
+  private val source: String?
+) : MastodonAPIRequest<DonationCampaign>( HttpMethod.GET, null, DonationCampaign::class.java ) {
 
-	public GetDonationCampaigns(String locale, String seed, String source){
-		super(HttpMethod.GET, null, DonationCampaign.class);
-		this.locale=locale;
-		this.seed=seed;
-		this.source=source;
-		setCacheable();
-	}
+  companion object {
+    private const val HTTPS = "https"
+    private const val DEFAULT_API = "api.joinmastodon.org"
+    private const val API_ENDPOINT = "/v1/donations/campaigns/active"
+    private const val PLATFORM = "platform"
+    private const val ANDROID = "android"
+    private const val LOCALE = "locale"
+    private const val SEED = "seed"
+    private const val ENVIRONMENT = "environment"
+    private const val STAGING = "staging"
+    private const val SOURCE = "source"
+  }
 
-	public void setStaging(boolean staging){
-		this.staging=staging;
-	}
 
-	@Override
-	public Uri getURL(){
-		Uri.Builder builder=new Uri.Builder()
-				.scheme("https")
-				.authority("api.joinmastodon.org")
-				.path("/v1/donations/campaigns/active")
-				.appendQueryParameter("platform", "android")
-				.appendQueryParameter("locale", locale)
-				.appendQueryParameter("seed", seed);
-		if(staging)
-			builder.appendQueryParameter("environment", "staging");
-		if(!TextUtils.isEmpty(source))
-			builder.appendQueryParameter("source", source);
-		return builder.build();
-	}
+  private var staging = false
+
+  init {
+    setCacheable()
+  }
+
+  fun setStaging(staging: Boolean) {
+    this.staging = staging
+  }
+
+  override fun getURL(): Uri {
+
+    return Uri.Builder().apply {
+
+      scheme(HTTPS)
+      authority(DEFAULT_API)
+      path(API_ENDPOINT)
+
+      appendQueryParameter(PLATFORM, ANDROID)
+      appendQueryParameter(LOCALE, locale)
+      appendQueryParameter(SEED, seed)
+
+      if (staging) appendQueryParameter(ENVIRONMENT, STAGING)
+      if (!source.isNullOrEmpty()) appendQueryParameter(SOURCE, source)
+
+    }.build()
+
+  }
 }
