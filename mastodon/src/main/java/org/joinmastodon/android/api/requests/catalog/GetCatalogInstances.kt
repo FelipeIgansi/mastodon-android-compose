@@ -1,39 +1,43 @@
-package org.joinmastodon.android.api.requests.catalog;
+package org.joinmastodon.android.api.requests.catalog
 
-import android.net.Uri;
-import android.text.TextUtils;
+import android.net.Uri
+import com.google.gson.reflect.TypeToken
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.catalog.CatalogInstance
 
-import com.google.gson.reflect.TypeToken;
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.catalog.CatalogInstance;
+private const val HTTPS = "https"
+private const val DEFAULT_API = "api.joinmastodon.org"
+private const val SERVERS_ENDPOINT = "/servers"
+private const val LANGUAGE = "language"
+private const val CATEGORY = "category"
+private const val REGISTRATIONS = "registrations"
+private const val ALL = "all"
 
-import java.util.List;
+class GetCatalogInstances(
+  private val lang: String?,
+  private val category: String?,
+  private val includeClosedSignups: Boolean
+) :
+  MastodonAPIRequest<MutableList<CatalogInstance>>(
+    HttpMethod.GET,
+    null,
+    object : TypeToken<MutableList<CatalogInstance>>() {}
+  ) {
 
-public class GetCatalogInstances extends MastodonAPIRequest<List<CatalogInstance>>{
+  override fun getURL(): Uri {
 
-	private String lang, category;
-	private boolean includeClosedSignups;
+    return Uri.Builder().apply {
 
-	public GetCatalogInstances(String lang, String category, boolean includeClosedSignups){
-		super(HttpMethod.GET, null, new TypeToken<>(){});
-		this.lang=lang;
-		this.category=category;
-		this.includeClosedSignups=includeClosedSignups;
-	}
+      scheme(HTTPS)
+      authority(DEFAULT_API)
+      path(SERVERS_ENDPOINT)
 
-	@Override
-	public Uri getURL(){
-		Uri.Builder builder=new Uri.Builder()
-				.scheme("https")
-				.authority("api.joinmastodon.org")
-				.path("/servers");
-		if(!TextUtils.isEmpty(lang))
-			builder.appendQueryParameter("language", lang);
-		if(!TextUtils.isEmpty(category))
-			builder.appendQueryParameter("category", category);
-		if(includeClosedSignups)
-			builder.appendQueryParameter("registrations", "all");
-		return builder.build();
-	}
+      if (!lang.isNullOrEmpty()) appendQueryParameter(LANGUAGE, lang)
+      if (!category.isNullOrEmpty()) appendQueryParameter(CATEGORY, category)
+      if (includeClosedSignups) appendQueryParameter(REGISTRATIONS, ALL)
+
+    }.build()
+
+  }
 }
