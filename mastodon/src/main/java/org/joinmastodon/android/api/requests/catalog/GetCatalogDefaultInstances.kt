@@ -1,22 +1,21 @@
-package org.joinmastodon.android.api.requests.catalog;
+package org.joinmastodon.android.api.requests.catalog
 
-import android.net.Uri;
+import androidx.core.net.toUri
+import com.google.gson.reflect.TypeToken
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.catalog.CatalogDefaultInstance
 
-import com.google.gson.reflect.TypeToken;
+class GetCatalogDefaultInstances :
+  MastodonAPIRequest<MutableList<CatalogDefaultInstance>>(
+    HttpMethod.GET,
+    null,
+    object : TypeToken<MutableList<CatalogDefaultInstance>>() {}
+  ) {
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.catalog.CatalogDefaultInstance;
+  init {
+    setTimeout(500)
+  }
 
-import java.util.List;
+  override fun getURL() = "https://api.joinmastodon.org/default-servers".toUri()
 
-public class GetCatalogDefaultInstances extends MastodonAPIRequest<List<CatalogDefaultInstance>>{
-	public GetCatalogDefaultInstances(){
-		super(HttpMethod.GET, null, new TypeToken<>(){});
-		setTimeout(500);
-	}
-
-	@Override
-	public Uri getURL(){
-		return Uri.parse("https://api.joinmastodon.org/default-servers");
-	}
 }
