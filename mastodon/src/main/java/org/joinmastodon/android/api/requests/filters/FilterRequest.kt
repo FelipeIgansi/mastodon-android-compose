@@ -1,26 +1,15 @@
-package org.joinmastodon.android.api.requests.filters;
+package org.joinmastodon.android.api.requests.filters
 
-import org.joinmastodon.android.model.FilterAction;
-import org.joinmastodon.android.model.FilterContext;
-
-import java.util.EnumSet;
-import java.util.List;
-
-import androidx.annotation.Keep;
+import androidx.annotation.Keep
+import org.joinmastodon.android.model.FilterAction
+import org.joinmastodon.android.model.FilterContext
+import java.util.EnumSet
 
 @Keep
-class FilterRequest{
-	public String title;
-	public EnumSet<FilterContext> context;
-	public FilterAction filterAction;
-	public Integer expiresIn;
-	public List<KeywordAttribute> keywordsAttributes;
-
-	public FilterRequest(String title, EnumSet<FilterContext> context, FilterAction filterAction, Integer expiresIn, List<KeywordAttribute> keywordsAttributes){
-		this.title=title;
-		this.context=context;
-		this.filterAction=filterAction;
-		this.expiresIn=expiresIn;
-		this.keywordsAttributes=keywordsAttributes;
-	}
-}
+internal class FilterRequest(
+  val title: String,
+  val context: EnumSet<FilterContext>,
+  val filterAction: FilterAction,
+  val expiresIn: Int?,
+  val keywordsAttributes: MutableList<KeywordAttribute>
+)
