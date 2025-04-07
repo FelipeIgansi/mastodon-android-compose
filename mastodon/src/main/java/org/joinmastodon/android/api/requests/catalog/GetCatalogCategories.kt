@@ -1,32 +1,29 @@
-package org.joinmastodon.android.api.requests.catalog;
+package org.joinmastodon.android.api.requests.catalog
 
-import android.net.Uri;
-import android.text.TextUtils;
+import android.net.Uri
+import android.text.TextUtils
+import com.google.gson.reflect.TypeToken
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.catalog.CatalogCategory
 
-import com.google.gson.reflect.TypeToken;
+class GetCatalogCategories(private val lang: String?) :
+  MastodonAPIRequest<MutableList<CatalogCategory>>(
+    HttpMethod.GET,
+    null,
+    object : TypeToken<MutableList<CatalogCategory>>() {}
+  ) {
+  override fun getURL(): Uri? {
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.catalog.CatalogCategory;
-import org.joinmastodon.android.model.catalog.CatalogInstance;
+    return Uri.Builder().apply {
 
-import java.util.List;
+      scheme("https")
+      authority("api.joinmastodon.org")
+      path("/categories")
 
-public class GetCatalogCategories extends MastodonAPIRequest<List<CatalogCategory>>{
-	private String lang;
+      if (!TextUtils.isEmpty(lang)) {
+        appendQueryParameter("language", lang)
+      }
+    }.build()
 
-	public GetCatalogCategories(String lang){
-		super(HttpMethod.GET, null, new TypeToken<>(){});
-		this.lang=lang;
-	}
-
-	@Override
-	public Uri getURL(){
-		Uri.Builder builder=new Uri.Builder()
-				.scheme("https")
-				.authority("api.joinmastodon.org")
-				.path("/categories");
-		if(!TextUtils.isEmpty(lang))
-			builder.appendQueryParameter("language", lang);
-		return builder.build();
-	}
+  }
 }
