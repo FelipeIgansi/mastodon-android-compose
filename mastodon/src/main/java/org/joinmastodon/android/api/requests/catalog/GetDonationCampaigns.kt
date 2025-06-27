@@ -9,7 +9,11 @@ class GetDonationCampaigns(
   private val locale: String,
   private val seed: String,
   private val source: String?
-) : MastodonAPIRequest<DonationCampaign>( HttpMethod.GET, null, DonationCampaign::class.java ) {
+) : MastodonAPIRequest<DonationCampaign>(
+  method = HttpMethod.GET,
+  path = null,
+  respClass = DonationCampaign::class.java
+) {
 
   companion object {
     private const val HTTPS = "https"

@@ -1,30 +1,56 @@
-package org.joinmastodon.android.api.requests.filters;
+package org.joinmastodon.android.api.requests.filters
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Filter;
-import org.joinmastodon.android.model.FilterAction;
-import org.joinmastodon.android.model.FilterContext;
-import org.joinmastodon.android.model.FilterKeyword;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Filter
+import org.joinmastodon.android.model.FilterAction
+import org.joinmastodon.android.model.FilterContext
+import org.joinmastodon.android.model.FilterKeyword
+import java.util.EnumSet
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+class UpdateFilter(
+  id: String,
+  title: String,
+  context: EnumSet<FilterContext>,
+  action: FilterAction,
+  expiresIn: Int,
+  words: MutableList<FilterKeyword>,
+  deletedWords: MutableList<String>
+) : MastodonAPIRequest<Filter>(
+  method = HttpMethod.PUT,
+  path = "/filters/$id",
+  respClass = Filter::class.java
+) {
+  init {
 
-public class UpdateFilter extends MastodonAPIRequest<Filter>{
-	public UpdateFilter(String id, String title, EnumSet<FilterContext> context, FilterAction action, int expiresIn, List<FilterKeyword> words, List<String> deletedWords){
-		super(HttpMethod.PUT, "/filters/"+id, Filter.class);
+    val attrs = words.map {
+      KeywordAttribute(
+        id = it.id,
+        delete = null,
+        keyword = it.keyword,
+        wholeWord = it.wholeWord
+      )
+    } + deletedWords.map {
+      KeywordAttribute(
+        id = it,
+        delete = true,
+        keyword = null,
+        wholeWord = null
+      )
+    }
 
-		List<KeywordAttribute> attrs=Stream.of(
-				words.stream().map(w->new KeywordAttribute(w.id, null, w.keyword, w.wholeWord)),
-				deletedWords.stream().map(wid->new KeywordAttribute(wid, true, null, null))
-		).flatMap(Function.identity()).collect(Collectors.toList());
-		setRequestBody(new FilterRequest(title, context, action, expiresIn==0 ? null : expiresIn, attrs));
-	}
 
-	@Override
-	protected String getPathPrefix(){
-		return "/api/v2";
-	}
+
+    setRequestBody(
+      FilterRequest(
+        title = title,
+        context = context,
+        filterAction = action,
+        expiresIn = if (expiresIn == 0) null else expiresIn,
+        keywordsAttributes = attrs.toMutableList()
+      )
+    )
+  }
+
+  override fun getPathPrefix() = "/api/v2"
+
 }

@@ -1,15 +1,14 @@
-package org.joinmastodon.android.api.requests.trends;
+package org.joinmastodon.android.api.requests.trends
 
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.reflect.TypeToken
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Hashtag
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Hashtag;
-
-import java.util.List;
-
-public class GetTrendingHashtags extends MastodonAPIRequest<List<Hashtag>>{
-	public GetTrendingHashtags(int limit){
-		super(HttpMethod.GET, "/trends", new TypeToken<>(){});
-		addQueryParameter("limit", limit+"");
-	}
+class GetTrendingHashtags(limit: Int) : MastodonAPIRequest<MutableList<Hashtag?>?>(
+  method = HttpMethod.GET,
+  path = "/trends",
+  respTypeToken = object : TypeToken<MutableList<Hashtag?>?>() {}) {
+  init {
+    addQueryParameter("limit", limit.toString() + "")
+  }
 }

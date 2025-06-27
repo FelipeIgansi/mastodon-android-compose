@@ -11,14 +11,14 @@ class UpdateAccountCredentialsPreferences(
   discoverable: Boolean?,
   indexable: Boolean?
 ) : MastodonAPIRequest<Account>(
-  HttpMethod.PATCH,
-  "/accounts/update_credentials",
-  Account::class.java
+  method = HttpMethod.PATCH,
+  path = "/accounts/update_credentials",
+  respClass = Account::class.java
 ) {
   init {
     val requestSource = RequestSource(
-      preferences.postingDefaultVisibility,
-      preferences.postingDefaultLanguage
+      privacy = preferences.postingDefaultVisibility,
+      language = preferences.postingDefaultLanguage
     )
 
     val requestBody = Request(locked, discoverable, indexable, requestSource)

@@ -4,9 +4,9 @@ import org.joinmastodon.android.api.MastodonAPIRequest
 import org.joinmastodon.android.model.Relationship
 
 class RejectFollowRequest(accountID: String) : MastodonAPIRequest<Relationship>(
-  HttpMethod.POST,
-  "/follow_requests/$accountID/reject",
-  Relationship::class.java
+  method = HttpMethod.POST,
+  path = "/follow_requests/$accountID/reject",
+  respClass = Relationship::class.java
 ) {
   init {
     setRequestBody(Any())

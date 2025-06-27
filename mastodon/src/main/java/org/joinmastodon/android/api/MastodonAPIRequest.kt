@@ -1,234 +1,258 @@
-package org.joinmastodon.android.api;
+package org.joinmastodon.android.api
 
-import android.app.Activity;
-import android.app.ProgressDialog;
-import android.net.Uri;
-import android.util.Log;
-import android.util.Pair;
+import android.app.Activity
+import android.app.ProgressDialog
+import android.net.Uri
+import android.util.Log
+import androidx.annotation.CallSuper
+import androidx.annotation.StringRes
+import com.google.gson.reflect.TypeToken
+import me.grishka.appkit.api.APIRequest
+import me.grishka.appkit.api.Callback
+import me.grishka.appkit.api.ErrorResponse
+import okhttp3.Call
+import okhttp3.RequestBody
+import okhttp3.Response
+import org.joinmastodon.android.BuildConfig
+import org.joinmastodon.android.api.session.AccountSession
+import org.joinmastodon.android.api.session.AccountSessionManager
+import org.joinmastodon.android.model.BaseModel
+import org.joinmastodon.android.model.Token
+import java.io.IOException
 
-import com.google.gson.reflect.TypeToken;
+abstract class MastodonAPIRequest<T> : APIRequest<T> {
+  companion object {
+    private const val TAG = "MastodonAPIRequest"
+  }
 
-import org.joinmastodon.android.BuildConfig;
-import org.joinmastodon.android.api.session.AccountSession;
-import org.joinmastodon.android.api.session.AccountSessionManager;
-import org.joinmastodon.android.model.BaseModel;
-import org.joinmastodon.android.model.Token;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+  private var domain: String? = null
+  private var account: AccountSession? = null
+  private var path: String? = null
+  private var method: String? = null
+  private var requestBody: Any? = null
+  private var queryParams: MutableList<Pair<String, String>>? = null
 
-import androidx.annotation.CallSuper;
-import androidx.annotation.StringRes;
-import me.grishka.appkit.api.APIRequest;
-import me.grishka.appkit.api.Callback;
-import me.grishka.appkit.api.ErrorResponse;
-import okhttp3.Call;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+  @JvmField
+  var respClass: Class<T>? = null
 
-public abstract class MastodonAPIRequest<T> extends APIRequest<T>{
-	private static final String TAG="MastodonAPIRequest";
+  @JvmField
+  var respTypeToken: TypeToken<T>? = null
 
-	private String domain;
-	private AccountSession account;
-	private String path;
-	private String method;
-	private Object requestBody;
-	private List<Pair<String, String>> queryParams;
-	Class<T> respClass;
-	TypeToken<T> respTypeToken;
-	Call okhttpCall;
-	Token token;
-	boolean canceled;
-	Map<String, String> headers;
-	long timeout;
-	boolean cacheable;
-	private ProgressDialog progressDialog;
-	protected boolean removeUnsupportedItems;
+  @JvmField
+  var okhttpCall: Call? = null
 
-	public MastodonAPIRequest(HttpMethod method, String path, Class<T> respClass){
-		this.path=path;
-		this.method=method.toString();
-		this.respClass=respClass;
-	}
+  @JvmField
+  var token: Token? = null
 
-	public MastodonAPIRequest(HttpMethod method, String path, TypeToken<T> respTypeToken){
-		this.path=path;
-		this.method=method.toString();
-		this.respTypeToken=respTypeToken;
-	}
+  @JvmField
+  var canceled = false
 
-	@Override
-	public synchronized void cancel(){
-		if(BuildConfig.DEBUG)
-			Log.d(TAG, "canceling request "+this);
-		canceled=true;
-		if(okhttpCall!=null){
-			okhttpCall.cancel();
-		}
-	}
+  @JvmField
+  var headers: MutableMap<String, String>? = null
 
-	@Override
-	public APIRequest<T> exec(){
-		throw new UnsupportedOperationException("Use exec(accountID) or execNoAuth(domain)");
-	}
+  @JvmField
+  var timeout: Long = 0
 
-	public MastodonAPIRequest<T> exec(String accountID){
-		try{
-			account=AccountSessionManager.getInstance().getAccount(accountID);
-			domain=account.domain;
-			account.getApiController().submitRequest(this);
-		}catch(Exception x){
-			Log.e(TAG, "exec: this shouldn't happen, but it still did", x);
-			invokeErrorCallback(new MastodonErrorResponse(x.getLocalizedMessage(), -1, x));
-		}
-		return this;
-	}
+  @JvmField
+  var cacheable = false
+  private var progressDialog: ProgressDialog? = null
 
-	public MastodonAPIRequest<T> execNoAuth(String domain){
-		this.domain=domain;
-		AccountSessionManager.getInstance().getUnauthenticatedApiController().submitRequest(this);
-		return this;
-	}
+  @JvmField
+  protected var removeUnsupportedItems = false
 
-	public MastodonAPIRequest<T> exec(String domain, Token token){
-		this.domain=domain;
-		this.token=token;
-		AccountSessionManager.getInstance().getUnauthenticatedApiController().submitRequest(this);
-		return this;
-	}
 
-	public MastodonAPIRequest<T> wrapProgress(Activity activity, @StringRes int message, boolean cancelable){
-		progressDialog=new ProgressDialog(activity);
-		progressDialog.setMessage(activity.getString(message));
-		progressDialog.setCancelable(cancelable);
-		if(cancelable){
-			progressDialog.setOnCancelListener(dialog->cancel());
-		}
-		progressDialog.show();
-		return this;
-	}
+  constructor(method: HttpMethod?, path: String?, respClass: Class<T>?) {
+    this.path = path
+    this.method = method.toString()
+    this.respClass = respClass
+  }
 
-	protected void setRequestBody(Object body){
-		requestBody=body;
-	}
+  constructor(method: HttpMethod?, path: String?, respTypeToken: TypeToken<T>?) {
+    this.path = path
+    this.method = method.toString()
+    this.respTypeToken = respTypeToken
+  }
 
-	protected void addQueryParameter(String key, String value){
-		if(queryParams==null)
-			queryParams=new ArrayList<>();
-		queryParams.add(new Pair<>(key, value));
-	}
 
-	protected void addHeader(String key, String value){
-		if(headers==null)
-			headers=new HashMap<>();
-		headers.put(key, value);
-	}
+  @Synchronized
+  override fun cancel() {
+    if (BuildConfig.DEBUG) {
+      Log.d(TAG, "canceling request $this")
+    }
+    canceled = true
+    okhttpCall?.cancel()
+  }
 
-	protected void setTimeout(long timeout){
-		this.timeout=timeout;
-	}
+  override fun exec(): APIRequest<T> {
+    throw UnsupportedOperationException("Use exec(accountID) or execNoAuth(domain)")
+  }
 
-	protected void setCacheable(){
-		cacheable=true;
-	}
 
-	protected String getPathPrefix(){
-		return "/api/v1";
-	}
+  fun exec(accountID: String): MastodonAPIRequest<T> {
+    try {
+      account = AccountSessionManager.getInstance().getAccount(accountID)
+      domain = account?.domain
+      account?.getApiController()?.submitRequest(this)
+    } catch (x: Exception) {
+      Log.e(TAG, "exec: this shouldn't happen, but it still did", x)
+      invokeErrorCallback(MastodonErrorResponse(x.localizedMessage ?: "", -1, x))
+    }
+    return this
+  }
 
-	public Uri getURL(){
-		Uri.Builder builder=new Uri.Builder()
-				.scheme("https")
-				.authority(domain)
-				.path(getPathPrefix()+path);
-		if(queryParams!=null){
-			for(Pair<String, String> param:queryParams){
-				builder.appendQueryParameter(param.first, param.second);
-			}
-		}
-		return builder.build();
-	}
 
-	public String getMethod(){
-		return method;
-	}
+  fun execNoAuth(domain: String): MastodonAPIRequest<T> {
+    this.domain = domain
+    AccountSessionManager.getInstance().unauthenticatedApiController.submitRequest(this)
+    return this
+  }
 
-	public RequestBody getRequestBody() throws IOException{
-		if(requestBody instanceof RequestBody rb)
-			return rb;
-		return requestBody==null ? null : new JsonObjectRequestBody(requestBody);
-	}
+  fun exec(domain: String, token: Token): MastodonAPIRequest<T> {
+    this.domain = domain
+    this.token = token
+    AccountSessionManager.getInstance().unauthenticatedApiController.submitRequest(this)
+    return this
+  }
 
-	@Override
-	public MastodonAPIRequest<T> setCallback(Callback<T> callback){
-		super.setCallback(callback);
-		return this;
-	}
 
-	@CallSuper
-	public void validateAndPostprocessResponse(T respObj, Response httpResponse) throws IOException{
-		if(respObj instanceof BaseModel){
-			((BaseModel) respObj).postprocess();
-		}else if(respObj instanceof List){
-			if(removeUnsupportedItems){
-				Iterator<?> itr=((List<?>) respObj).iterator();
-				while(itr.hasNext()){
-					Object item=itr.next();
-					if(item instanceof BaseModel){
-						try{
-							((BaseModel) item).postprocess();
-						}catch(ObjectValidationException x){
-							Log.w(TAG, "Removing invalid object from list", x);
-							itr.remove();
-						}
-					}
-				}
-				for(Object item:((List<?>) respObj)){
-					if(item instanceof BaseModel){
-						((BaseModel) item).postprocess();
-					}
-				}
-			}else{
-				for(Object item:((List<?>) respObj)){
-					if(item instanceof BaseModel)
-						((BaseModel) item).postprocess();
-				}
-			}
-		}
-	}
+  fun wrapProgress(
+    activity: Activity, @StringRes message: Int, cancelable: Boolean
+  ): MastodonAPIRequest<T> {
+    progressDialog = ProgressDialog(activity).apply {
+      setMessage(activity.getString(message))
+      setCancelable(cancelable)
+      if (cancelable) {
+        setOnCancelListener { cancel() }
+      }
+      show()
+    }
+    return this
+  }
 
-	void onError(ErrorResponse err){
-		if(!canceled)
-			invokeErrorCallback(err);
-	}
+  protected fun setRequestBody(body: Any?) {
+    this.requestBody = body
+  }
 
-	void onError(String msg, int httpStatus, Throwable exception){
-		if(!canceled)
-			invokeErrorCallback(new MastodonErrorResponse(msg, httpStatus, exception));
-	}
+  protected fun addQueryParameter(key: String, value: String) {
+    if (queryParams == null) {
+      queryParams = ArrayList()
+    }
+    queryParams?.add(Pair(key, value))
+  }
 
-	void onSuccess(T resp){
-		if(!canceled)
-			invokeSuccessCallback(resp);
-	}
 
-	@Override
-	protected void onRequestDone(){
-		if(progressDialog!=null){
-			progressDialog.dismiss();
-		}
-	}
+  protected fun addHeader(key: String, value: String) {
+    if (headers == null) {
+      headers = HashMap()
+    }
+    headers?.put(key, value)
+  }
 
-	public enum HttpMethod{
-		GET,
-		POST,
-		PUT,
-		DELETE,
-		PATCH
-	}
+
+  protected fun setTimeout(timeout: Long) {
+    this.timeout = timeout
+  }
+
+  protected fun setCacheable() {
+    this.cacheable = true
+  }
+
+
+  protected open fun getPathPrefix() = "/api/v1"
+
+
+  open fun getURL(): Uri {
+    val builder = Uri.Builder().scheme("https").authority(domain).path(getPathPrefix() + path)
+
+    queryParams?.forEach { param ->
+      builder.appendQueryParameter(param.first, param.second)
+    }
+
+    return builder.build()
+  }
+
+
+  fun getMethod() = method
+
+  @Throws(IOException::class)
+  open fun getRequestBody(): RequestBody? {
+    return when (requestBody) {
+      is RequestBody -> requestBody as RequestBody
+      null -> null
+      else -> JsonObjectRequestBody(requestBody!!)
+    }
+  }
+
+  override fun setCallback(callback: Callback<T>): MastodonAPIRequest<T> {
+    super.setCallback(callback)
+    return this
+  }
+
+
+  @CallSuper
+  @Throws(IOException::class)
+  open fun validateAndPostprocessResponse(respObj: T, httpResponse: Response) {
+    when (respObj) {
+      is BaseModel -> {
+        respObj.postprocess()
+      }
+
+      is List<*> -> {
+        if (removeUnsupportedItems) {
+          val iterator = (respObj as MutableList<*>).iterator()
+          while (iterator.hasNext()) {
+            val item = iterator.next()
+            if (item is BaseModel) {
+              try {
+                item.postprocess()
+              } catch (x: ObjectValidationException) {
+                Log.w(TAG, "Removing invalid object from list", x)
+                iterator.remove()
+              }
+            }
+          }
+          respObj.forEach { item ->
+            if (item is BaseModel) {
+              item.postprocess()
+            }
+          }
+        } else {
+          respObj.forEach { item ->
+            if (item is BaseModel) {
+              item.postprocess()
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+  fun onError(err: ErrorResponse) {
+    if (!canceled) {
+      invokeErrorCallback(err)
+    }
+  }
+
+  fun onError(msg: String, httpStatus: Int, exception: Throwable?) {
+    if (!canceled) {
+      invokeErrorCallback(MastodonErrorResponse(msg, httpStatus, exception))
+    }
+  }
+
+  fun onSuccess(resp: T) {
+    if (!canceled) {
+      invokeSuccessCallback(resp)
+    }
+  }
+
+  override fun onRequestDone() {
+    progressDialog?.dismiss()
+  }
+
+  enum class HttpMethod {
+    GET, POST, PUT, DELETE, PATCH
+  }
+
 }

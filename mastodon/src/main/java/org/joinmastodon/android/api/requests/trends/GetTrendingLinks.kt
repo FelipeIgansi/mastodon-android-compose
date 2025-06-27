@@ -1,15 +1,14 @@
-package org.joinmastodon.android.api.requests.trends;
+package org.joinmastodon.android.api.requests.trends
 
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.reflect.TypeToken
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Card
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Card;
-
-import java.util.List;
-
-public class GetTrendingLinks extends MastodonAPIRequest<List<Card>>{
-	public GetTrendingLinks(int limit){
-		super(HttpMethod.GET, "/trends/links", new TypeToken<>(){});
-		addQueryParameter("limit", String.valueOf(limit));
-	}
+class GetTrendingLinks(limit: Int) : MastodonAPIRequest<MutableList<Card?>?>(
+  method = HttpMethod.GET,
+  path = "/trends/links",
+  respTypeToken = object : TypeToken<MutableList<Card?>?>() {}) {
+  init {
+    addQueryParameter("limit", limit.toString())
+  }
 }

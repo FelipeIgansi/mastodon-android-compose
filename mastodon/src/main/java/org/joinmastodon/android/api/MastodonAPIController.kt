@@ -1,232 +1,324 @@
-package org.joinmastodon.android.api;
+@file:JvmName("MastodonAPIController")
 
-import android.util.Log;
+package org.joinmastodon.android.api
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
+import android.util.Log
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonIOException
+import com.google.gson.JsonParser
+import com.google.gson.JsonSyntaxException
+import me.grishka.appkit.utils.WorkerThread
+import okhttp3.Cache
+import okhttp3.CacheControl
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import org.joinmastodon.android.BuildConfig
+import org.joinmastodon.android.MastodonApp
+import org.joinmastodon.android.api.gson.IsoInstantTypeAdapter
+import org.joinmastodon.android.api.gson.IsoLocalDateTypeAdapter
+import org.joinmastodon.android.api.session.AccountSession
+import java.io.File
+import java.io.IOException
+import java.time.Instant
+import java.time.LocalDate
+import java.util.concurrent.TimeUnit
 
-import org.joinmastodon.android.BuildConfig;
-import org.joinmastodon.android.MastodonApp;
-import org.joinmastodon.android.api.gson.IsoInstantTypeAdapter;
-import org.joinmastodon.android.api.gson.IsoLocalDateTypeAdapter;
-import org.joinmastodon.android.api.session.AccountSession;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+class MastodonAPIController(private val session: AccountSession?) {
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import me.grishka.appkit.utils.WorkerThread;
-import okhttp3.Cache;
-import okhttp3.CacheControl;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+  companion object {
+    private const val TAG = "MastodonAPIController"
 
-public class MastodonAPIController{
-	private static final String TAG="MastodonAPIController";
-	public static final Gson gson=new GsonBuilder()
-			.disableHtmlEscaping()
-			.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-			.registerTypeAdapter(Instant.class, new IsoInstantTypeAdapter())
-			.registerTypeAdapter(LocalDate.class, new IsoLocalDateTypeAdapter())
-			.create();
-	private static WorkerThread thread=new WorkerThread("MastodonAPIController");
-	private static OkHttpClient httpClient=new OkHttpClient.Builder()
-			.connectTimeout(60, TimeUnit.SECONDS)
-			.writeTimeout(60, TimeUnit.SECONDS)
-			.readTimeout(60, TimeUnit.SECONDS)
-			.cache(new Cache(new File(MastodonApp.context.getCacheDir(), "http"), 10*1024*1024))
-			.build();
+    @JvmField
+    var gson: Gson = GsonBuilder()
+      .disableHtmlEscaping()
+      .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+      .registerTypeAdapter(Instant::class.java, IsoInstantTypeAdapter())
+      .registerTypeAdapter(LocalDate::class.java, IsoLocalDateTypeAdapter())
+      .create()
 
-	private static final CacheControl NO_CACHE_WHATSOEVER=new CacheControl.Builder().noCache().noStore().build();
+    private val thread = WorkerThread("MastodonAPIController").apply { start() }
 
-	private AccountSession session;
+    private val httpClient = OkHttpClient.Builder()
+      .connectTimeout(60, TimeUnit.SECONDS)
+      .writeTimeout(60, TimeUnit.SECONDS)
+      .readTimeout(60, TimeUnit.SECONDS)
+      .cache(Cache(File(MastodonApp.context!!.cacheDir, "http"), 10 * 1024 * 1024))
+      .build()
 
-	static{
-		thread.start();
-	}
+    private val NO_CACHE_WHATSOEVER = CacheControl.Builder().noCache().noStore().build()
 
-	public MastodonAPIController(@Nullable AccountSession session){
-		this.session=session;
-	}
+    @JvmStatic
+    fun runInBackground(action: Runnable?) {
+      thread.postRunnable(action, 0)
+    }
 
-	public <T> void submitRequest(final MastodonAPIRequest<T> req){
-		thread.postRunnable(()->{
-			try{
-				if(req.canceled)
-					return;
-				Request.Builder builder=new Request.Builder()
-						.url(req.getURL().toString())
-						.method(req.getMethod(), req.getRequestBody())
-						.header("User-Agent", "MastodonAndroid/"+BuildConfig.VERSION_NAME);
+    @JvmStatic
+    fun getHttpClient(): OkHttpClient = this.httpClient
 
-				String token=null;
-				if(session!=null)
-					token=session.token.accessToken;
-				else if(req.token!=null)
-					token=req.token.accessToken;
+    private fun logTag(session: AccountSession?) = "[${session?.id ?: "no-auth"}] "
 
-				if(token!=null)
-					builder.header("Authorization", "Bearer "+token);
+  }
 
-				if(!req.cacheable)
-					builder.cacheControl(NO_CACHE_WHATSOEVER);
 
-				if(req.headers!=null){
-					for(Map.Entry<String, String> header:req.headers.entrySet()){
-						builder.header(header.getKey(), header.getValue());
-					}
-				}
+  fun <T> submitRequest(req: MastodonAPIRequest<T>) {
+    thread.postRunnable({
+      try {
+        if (req.canceled) return@postRunnable
 
-				Request hreq=builder.build();
-				Call call=httpClient.newCall(hreq);
-				synchronized(req){
-					req.okhttpCall=call;
-				}
-				if(req.timeout>0){
-					call.timeout().timeout(req.timeout, TimeUnit.MILLISECONDS);
-				}
+        val builder = Request.Builder()
+          .url(url = req.getURL().toString())
+          .method(
+            method = req.getMethod()!!,
+            body = req.getRequestBody()
+          )
+          .header(
+            name = "User-Agent",
+            value = "MastodonAndroid/${BuildConfig.VERSION_NAME}"
+          )
 
-				if(BuildConfig.DEBUG)
-					Log.d(TAG, logTag(session)+"Sending request: "+hreq);
+        val token = when {
+          session != null -> session.token.accessToken
+          req.token != null -> req.token?.accessToken
+          else -> null
+        }
 
-				call.enqueue(new Callback(){
-					@Override
-					public void onFailure(@NonNull Call call, @NonNull IOException e){
-						if(req.canceled)
-							return;
-						if(BuildConfig.DEBUG)
-							Log.w(TAG, logTag(session)+""+hreq+" failed", e);
-						synchronized(req){
-							req.okhttpCall=null;
-						}
-						req.onError(e.getLocalizedMessage(), 0, e);
-					}
+        token?.let {
+          builder.header(name = "Authorization", value = "Bearer $it")
+        }
 
-					@Override
-					public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException{
-						if(req.canceled){
-							response.close();
-							return;
-						}
-						if(BuildConfig.DEBUG)
-							Log.d(TAG, logTag(session)+hreq+" received response: "+response);
-						synchronized(req){
-							req.okhttpCall=null;
-						}
-						try(ResponseBody body=response.body()){
-							Reader reader=body.charStream();
-							if(response.isSuccessful()){
-								T respObj;
-								try{
-									if(BuildConfig.DEBUG){
-										JsonElement respJson=JsonParser.parseReader(reader);
-										Log.d(TAG, logTag(session)+"response body: "+respJson);
-										if(req.respTypeToken!=null)
-											respObj=gson.fromJson(respJson, req.respTypeToken.getType());
-										else if(req.respClass!=null)
-											respObj=gson.fromJson(respJson, req.respClass);
-										else
-											respObj=null;
-									}else{
-										if(req.respTypeToken!=null)
-											respObj=gson.fromJson(reader, req.respTypeToken.getType());
-										else if(req.respClass!=null)
-											respObj=gson.fromJson(reader, req.respClass);
-										else
-											respObj=null;
-									}
-								}catch(JsonIOException|JsonSyntaxException x){
-									if(BuildConfig.DEBUG)
-										Log.w(TAG, logTag(session)+response+" error parsing or reading body", x);
-									req.onError(x.getLocalizedMessage(), response.code(), x);
-									return;
-								}
+        if (!req.cacheable) {
+          builder.cacheControl(cacheControl = NO_CACHE_WHATSOEVER)
+        }
 
-								try{
-									req.validateAndPostprocessResponse(respObj, response);
-								}catch(IOException x){
-									if(BuildConfig.DEBUG)
-										Log.w(TAG, logTag(session)+response+" error post-processing or validating response", x);
-									req.onError(x.getLocalizedMessage(), response.code(), x);
-									return;
-								}
+        req.headers?.forEach { (key, value) ->
+          builder.header(key, value)
+        }
 
-								if(BuildConfig.DEBUG)
-									Log.d(TAG, logTag(session)+response+" parsed successfully: "+respObj);
+        val hreq = builder.build()
+        val call = httpClient.newCall(hreq)
 
-								req.onSuccess(respObj);
-							}else{
-								try{
-									JsonObject error=JsonParser.parseReader(reader).getAsJsonObject();
-									Log.w(TAG, logTag(session)+response+" received error: "+error);
-									if(error.has("details")){
-										MastodonDetailedErrorResponse err=new MastodonDetailedErrorResponse(error.get("error").getAsString(), response.code(), null);
-										HashMap<String, List<MastodonDetailedErrorResponse.FieldError>> details=new HashMap<>();
-										JsonObject errorDetails=error.getAsJsonObject("details");
-										for(String key:errorDetails.keySet()){
-											ArrayList<MastodonDetailedErrorResponse.FieldError> fieldErrors=new ArrayList<>();
-											for(JsonElement el:errorDetails.getAsJsonArray(key)){
-												JsonObject eobj=el.getAsJsonObject();
-												MastodonDetailedErrorResponse.FieldError fe=new MastodonDetailedErrorResponse.FieldError();
-												fe.description=eobj.get("description").getAsString();
-												fe.error=eobj.get("error").getAsString();
-												fieldErrors.add(fe);
-											}
-											details.put(key, fieldErrors);
-										}
-										err.setDetailedErrors(details);
-										req.onError(err);
-									}else{
-										req.onError(error.get("error").getAsString(), response.code(), null);
-									}
-								}catch(JsonIOException|JsonSyntaxException x){
-									req.onError(response.code()+" "+response.message(), response.code(), x);
-								}catch(Exception x){
-									req.onError("Error parsing an API error", response.code(), x);
-								}
-							}
-						}catch(Exception x){
-							Log.w(TAG, "onResponse: error processing response", x);
-							onFailure(call, (IOException) new IOException(x).fillInStackTrace());
-						}
-					}
-				});
-			}catch(Exception x){
-				if(BuildConfig.DEBUG)
-					Log.w(TAG, logTag(session)+"error creating and sending http request", x);
-				req.onError(x.getLocalizedMessage(), 0, x);
-			}
-		}, 0);
-	}
+        synchronized(req) {
+          req.okhttpCall = call
+        }
 
-	public static void runInBackground(Runnable action){
-		thread.postRunnable(action, 0);
-	}
+        if (req.timeout > 0) {
+          call.timeout().timeout(req.timeout, TimeUnit.MILLISECONDS)
+        }
 
-	public static OkHttpClient getHttpClient(){
-		return httpClient;
-	}
+        if (BuildConfig.DEBUG) {
+          Log.d(TAG, "${logTag(session)}Sending request: $hreq")
+        }
 
-	private static String logTag(AccountSession session){
-		return "["+(session==null ? "no-auth" : session.getID())+"] ";
-	}
+        call.enqueue(object : Callback {
+          override fun onFailure(call: Call, e: IOException) {
+            if (req.canceled) return
+
+            if (BuildConfig.DEBUG) {
+              Log.w(TAG, "${logTag(session)}$hreq failed", e)
+            }
+
+            synchronized(req) {
+              req.okhttpCall = null
+            }
+
+            req.onError(e.localizedMessage ?: "Unknown error", 0, e)
+          }
+
+          override fun onResponse(call: Call, response: Response) {
+            if (req.canceled) {
+              response.close()
+              return
+            }
+
+            if (BuildConfig.DEBUG) {
+              Log.d(TAG, "${logTag(session)}$hreq received response: $response")
+            }
+
+            synchronized(req) {
+              req.okhttpCall = null
+            }
+
+            try {
+              response.body?.use { body ->
+                val reader = body.charStream()
+
+                if (response.isSuccessful) {
+                  val respObj: T? = try {
+                    if (BuildConfig.DEBUG) {
+                      val respJson = JsonParser.parseReader(reader)
+                      Log.d(TAG, "${logTag(session)}response body: $respJson")
+
+                      when {
+                        req.respTypeToken != null -> gson.fromJson(
+                          respJson,
+                          req.respTypeToken?.type
+                        )
+
+                        req.respClass != null -> gson.fromJson(
+                          respJson,
+                          req.respClass
+                        )
+
+                        else -> null
+                      }
+                    } else {
+                      when {
+                        req.respTypeToken != null -> gson.fromJson(
+                          reader,
+                          req.respTypeToken?.type
+                        )
+
+                        req.respClass != null -> gson.fromJson(
+                          reader,
+                          req.respClass
+                        )
+
+                        else -> null
+                      }
+                    }
+                  } catch (exception: Exception) {
+                    when (exception) {
+                      is JsonIOException, is JsonSyntaxException -> {
+                        if (BuildConfig.DEBUG) {
+                          Log.w(
+                            TAG,
+                            "${logTag(session)}$response error parsing or reading body",
+                            exception
+                          )
+                        }
+                        req.onError(
+                          exception.localizedMessage as String,
+                          response.code,
+                          exception
+                        )
+                        return
+                      }
+
+                      else -> throw exception
+                    }
+                  }
+
+                  try {
+                    req.validateAndPostprocessResponse(
+                      respObj = respObj
+                        ?: throw NullPointerException("Empty response body"),
+                      httpResponse = response
+                    )
+                  } catch (ioException: IOException) {
+                    if (BuildConfig.DEBUG) {
+                      Log.w(
+                        TAG,
+                        "${logTag(session)}$response error post-processing or validating response",
+                        ioException
+                      )
+                    }
+                    req.onError(
+                      ioException.localizedMessage ?: "Unknown error",
+                      response.code,
+                      ioException
+                    )
+                    return
+                  }
+
+                  if (BuildConfig.DEBUG) {
+                    Log.d(
+                      TAG,
+                      "${logTag(session)}$response parsed successfully: $respObj"
+                    )
+                  }
+
+                  req.onSuccess(respObj)
+                } else {
+                  try {
+                    val errorJson = JsonParser.parseReader(reader).asJsonObject
+                    Log.w(
+                      TAG,
+                      "${logTag(session)}$response received error: $errorJson"
+                    )
+
+                    if (errorJson.has("details")) {
+                      val err = MastodonDetailedErrorResponse(
+                        errorJson.get("error").asString,
+                        response.code,
+                        null
+                      )
+
+                      val details =
+                        hashMapOf<String, List<MastodonDetailedErrorResponse.FieldError>>()
+                      val errorDetails = errorJson.getAsJsonObject("details")
+
+                      errorDetails.keySet().forEach { key ->
+                        val fieldErrors =
+                          arrayListOf<MastodonDetailedErrorResponse.FieldError>()
+                        errorDetails.getAsJsonArray(key).forEach { el ->
+                          val eobj = el.asJsonObject
+                          val fe =
+                            MastodonDetailedErrorResponse.FieldError()
+                              .apply {
+                                description =
+                                  eobj.get("description").asString
+                                error = eobj.get("error").asString
+                              }
+                          fieldErrors.add(fe)
+                        }
+                        details[key] = fieldErrors
+                      }
+
+                      err.detailedErrors = details
+                      req.onError(err)
+                    } else {
+                      req.onError(
+                        errorJson.get("error").asString,
+                        response.code,
+                        null
+                      )
+                    }
+                  } catch (exception: Exception) {
+                    when (exception) {
+                      is JsonIOException, is JsonSyntaxException -> {
+                        req.onError(
+                          "${response.code} ${response.message}",
+                          response.code,
+                          exception
+                        )
+                      }
+                    }
+                  } catch (exception: Exception) {
+                    req.onError(
+                      "Error parsing an API error",
+                      response.code,
+                      exception
+                    )
+                  }
+                }
+              }
+            } catch (exception: Exception) {
+              Log.w(TAG, "onResponse: error processing response", exception)
+              onFailure(
+                call,
+                IOException(exception).fillInStackTrace() as IOException
+              )
+            }
+          }
+        })
+
+      } catch (exception: Exception) {
+        if (BuildConfig.DEBUG) {
+          Log.w(
+            TAG,
+            "${logTag(session)}error creating and sending http request",
+            exception
+          )
+        }
+        req.onError(exception.localizedMessage ?: "Unknown error", 0, exception)
+      }
+    }, 0)
+  }
+
 }

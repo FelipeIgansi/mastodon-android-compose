@@ -13,9 +13,9 @@ class GetAccountStatuses(
   filter: Filter,
   hashtag: String?
 ) : MastodonAPIRequest<MutableList<Status>>(
-  HttpMethod.GET,
-  "/accounts/$id/statuses",
-  object : TypeToken<MutableList<Status>>() {}
+  method = HttpMethod.GET,
+  path = "/accounts/$id/statuses",
+  respTypeToken = object : TypeToken<MutableList<Status>>() {}
 ) {
 
   init {
@@ -36,7 +36,7 @@ class GetAccountStatuses(
       Filter.OWN_POSTS_AND_REPLIES -> addQueryParameter("exclude_reblogs", "true")
       Filter.PINNED -> addQueryParameter("pinned", "true")
     }
-    if (!TextUtils.isEmpty(hashtag)) addQueryParameter("tagged", hashtag)
+    if (!TextUtils.isEmpty(hashtag)) hashtag?.let { addQueryParameter("tagged", it) }
   }
 
   enum class Filter {

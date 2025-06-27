@@ -3,9 +3,9 @@ package org.joinmastodon.android.api.requests.accounts
 import org.joinmastodon.android.api.MastodonAPIRequest
 
 class GetDomainBlockPreview(domain: String) : MastodonAPIRequest<GetDomainBlockPreview.Response>(
-  HttpMethod.GET,
-  "/domain_blocks/preview",
-  Response::class.java
+  method = HttpMethod.GET,
+  path = "/domain_blocks/preview",
+  respClass = Response::class.java
 ) {
   init {
     addQueryParameter("domain", domain)
@@ -14,6 +14,7 @@ class GetDomainBlockPreview(domain: String) : MastodonAPIRequest<GetDomainBlockP
   class Response {
     @JvmField
     var followingCount: Int = 0
+
     @JvmField
     var followersCount: Int = 0
   }
