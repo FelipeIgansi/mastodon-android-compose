@@ -1,36 +1,27 @@
-package org.joinmastodon.android.utils;
+package org.joinmastodon.android.utils
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Objects;
-import java.util.function.Function;
+import java.util.LinkedList
+import java.util.Objects
+import java.util.function.Function
 
-public class TypedObjectPool<K, V>{
-	private final Function<K, V> producer;
-	private final HashMap<K, LinkedList<V>> pool=new HashMap<>();
+class TypedObjectPool<K, V>(private val producer: Function<K?, V?>) {
+  private val pool = HashMap<K?, LinkedList<V?>?>()
 
-	public TypedObjectPool(Function<K, V> producer){
-		this.producer=producer;
-	}
+  fun obtain(type: K?): V? {
+    var tp = pool[type]
+    if (tp == null) pool[type] = LinkedList<V?>().also { tp = it }
 
-	public V obtain(K type){
-		LinkedList<V> tp=pool.get(type);
-		if(tp==null)
-			pool.put(type, tp=new LinkedList<>());
+    var value = tp!!.poll()
+    if (value == null) value = producer.apply(type)
+    return value
+  }
 
-		V value=tp.poll();
-		if(value==null)
-			value=producer.apply(type);
-		return value;
-	}
+  fun reuse(type: K?, obj: V?) {
+    Objects.requireNonNull<V?>(obj)
+    Objects.requireNonNull<K?>(type)
 
-	public void reuse(K type, V obj){
-		Objects.requireNonNull(obj);
-		Objects.requireNonNull(type);
-
-		LinkedList<V> tp=pool.get(type);
-		if(tp==null)
-			pool.put(type, tp=new LinkedList<>());
-		tp.add(obj);
-	}
+    var tp = pool[type]
+    if (tp == null) pool[type] = LinkedList<V?>().also { tp = it }
+    tp!!.add(obj)
+  }
 }

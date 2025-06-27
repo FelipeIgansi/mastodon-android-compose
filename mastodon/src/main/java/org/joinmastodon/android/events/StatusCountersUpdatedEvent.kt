@@ -1,19 +1,20 @@
-package org.joinmastodon.android.events;
+package org.joinmastodon.android.events
 
-import org.joinmastodon.android.model.Status;
+import org.joinmastodon.android.model.Status
 
-public class StatusCountersUpdatedEvent{
-	public String id;
-	public long favorites, reblogs, replies;
-	public boolean favorited, reblogged, bookmarked;
-
-	public StatusCountersUpdatedEvent(Status s){
-		id=s.id;
-		favorites=s.favouritesCount;
-		reblogs=s.reblogsCount;
-		replies=s.repliesCount;
-		favorited=s.favourited;
-		reblogged=s.reblogged;
-		bookmarked=s.bookmarked;
-	}
+class StatusCountersUpdatedEvent(status: Status) {
+  @JvmField
+  var id: String? = status.id
+  @JvmField
+  var favorites: Long = status.favouritesCount
+  @JvmField
+  var reblogs: Long = status.reblogsCount
+  @JvmField
+  var replies: Long = status.repliesCount
+  @JvmField
+  var favorited: Boolean = status.favourited
+  @JvmField
+  var reblogged: Boolean = status.reblogged
+  @JvmField
+  var bookmarked: Boolean = status.bookmarked
 }

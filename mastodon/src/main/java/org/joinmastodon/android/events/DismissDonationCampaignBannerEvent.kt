@@ -1,9 +1,3 @@
-package org.joinmastodon.android.events;
+package org.joinmastodon.android.events
 
-public class DismissDonationCampaignBannerEvent{
-	public final String campaignID;
-
-	public DismissDonationCampaignBannerEvent(String campaignID){
-		this.campaignID=campaignID;
-	}
-}
+class DismissDonationCampaignBannerEvent(@JvmField val campaignID: String?)

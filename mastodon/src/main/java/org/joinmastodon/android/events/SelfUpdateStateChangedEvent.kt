@@ -1,11 +1,5 @@
-package org.joinmastodon.android.events;
+package org.joinmastodon.android.events
 
-import org.joinmastodon.android.updater.GithubSelfUpdater;
+import org.joinmastodon.android.updater.GithubSelfUpdater.UpdateState
 
-public class SelfUpdateStateChangedEvent{
-	public final GithubSelfUpdater.UpdateState state;
-
-	public SelfUpdateStateChangedEvent(GithubSelfUpdater.UpdateState state){
-		this.state=state;
-	}
-}
+class SelfUpdateStateChangedEvent(@JvmField val state: UpdateState?)

@@ -1,13 +1,5 @@
-package org.joinmastodon.android.events;
+package org.joinmastodon.android.events
 
-import org.joinmastodon.android.model.FollowList;
+import org.joinmastodon.android.model.FollowList
 
-public class ListUpdatedEvent{
-	public final String accountID;
-	public final FollowList list;
-
-	public ListUpdatedEvent(String accountID, FollowList list){
-		this.accountID=accountID;
-		this.list=list;
-	}
-}
+class ListUpdatedEvent(@JvmField val accountID: String?, @JvmField val list: FollowList?)

@@ -1,13 +1,5 @@
-package org.joinmastodon.android.events;
+package org.joinmastodon.android.events
 
-import org.joinmastodon.android.model.Status;
+import org.joinmastodon.android.model.Status
 
-public class StatusCreatedEvent{
-	public final Status status;
-	public final String accountID;
-
-	public StatusCreatedEvent(Status status, String accountID){
-		this.status=status;
-		this.accountID=accountID;
-	}
-}
+class StatusCreatedEvent(@JvmField val status: Status?, @JvmField val accountID: String?)

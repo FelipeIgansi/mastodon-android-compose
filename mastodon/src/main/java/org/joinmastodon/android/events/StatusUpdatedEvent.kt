@@ -1,11 +1,5 @@
-package org.joinmastodon.android.events;
+package org.joinmastodon.android.events
 
-import org.joinmastodon.android.model.Status;
+import org.joinmastodon.android.model.Status
 
-public class StatusUpdatedEvent{
-	public Status status;
-
-	public StatusUpdatedEvent(Status status){
-		this.status=status;
-	}
-}
+class StatusUpdatedEvent(@JvmField var status: Status?)

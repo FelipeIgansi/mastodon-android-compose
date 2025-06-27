@@ -1,10 +1,6 @@
-package org.joinmastodon.android.events;
+package org.joinmastodon.android.events
 
-public class NotificationRequestRespondedEvent{
-	public final String accountID, requestID;
-
-	public NotificationRequestRespondedEvent(String accountID, String requestID){
-		this.accountID=accountID;
-		this.requestID=requestID;
-	}
-}
+class NotificationRequestRespondedEvent(
+  @JvmField val accountID: String?,
+  @JvmField val requestID: String?
+)

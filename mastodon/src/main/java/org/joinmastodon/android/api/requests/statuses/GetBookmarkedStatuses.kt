@@ -1,16 +1,16 @@
-package org.joinmastodon.android.api.requests.statuses;
+package org.joinmastodon.android.api.requests.statuses
 
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.reflect.TypeToken
+import org.joinmastodon.android.api.requests.HeaderPaginationRequest
+import org.joinmastodon.android.model.HeaderPaginationList
+import org.joinmastodon.android.model.Status
 
-import org.joinmastodon.android.api.requests.HeaderPaginationRequest;
-import org.joinmastodon.android.model.Status;
-
-public class GetBookmarkedStatuses extends HeaderPaginationRequest<Status>{
-	public GetBookmarkedStatuses(String maxID, int limit){
-		super(HttpMethod.GET, "/bookmarks", new TypeToken<>(){});
-		if(maxID!=null)
-			addQueryParameter("max_id", maxID);
-		if(limit>0)
-			addQueryParameter("limit", limit+"");
-	}
+class GetBookmarkedStatuses(maxID: String?, limit: Int) : HeaderPaginationRequest<Status?>(
+  HttpMethod.GET,
+  "/bookmarks",
+  object : TypeToken<HeaderPaginationList<Status?>?>() {}) {
+  init {
+    if (maxID != null) addQueryParameter("max_id", maxID)
+    if (limit > 0) addQueryParameter("limit", limit.toString() + "")
+  }
 }

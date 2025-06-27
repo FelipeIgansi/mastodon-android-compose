@@ -1,51 +1,47 @@
-package org.joinmastodon.android.utils;
+package org.joinmastodon.android.utils
 
-import android.os.SystemClock;
+import android.os.SystemClock
+import kotlin.math.roundToLong
 
-public class TransferSpeedTracker{
-   private final double SMOOTHING_FACTOR=0.05;
+class TransferSpeedTracker {
 
-   private long lastKnownPos;
-   private long lastKnownPosTime;
-   private double lastSpeed;
-   private double averageSpeed;
-   private long totalBytes;
+  private var lastKnownPos: Long = 0
+  private var lastKnownPosTime: Long = 0
+  private var lastSpeed: Double = 0.0
+  private var averageSpeed: Double = 0.0
+  private var totalBytes: Long = 0
 
-   public void addSample(long position){
-      if(lastKnownPosTime==0){
-         lastKnownPosTime=SystemClock.uptimeMillis();
-         lastKnownPos=position;
-      }else{
-         long time=SystemClock.uptimeMillis();
-         lastSpeed=(position-lastKnownPos)/((double)(time-lastKnownPosTime)/1000.0);
-         lastKnownPos=position;
-         lastKnownPosTime=time;
-      }
-   }
+  fun addSample(position: Long) {
+    if (lastKnownPosTime == 0L) {
+      lastKnownPosTime = SystemClock.uptimeMillis()
+      lastKnownPos = position
+    } else {
+      val time = SystemClock.uptimeMillis()
+      lastSpeed = (position - lastKnownPos) / ((time - lastKnownPosTime).toDouble() / 1000.0)
+      lastKnownPos = position
+      lastKnownPosTime = time
+    }
+  }
 
-   public double getLastSpeed(){
-      return lastSpeed;
-   }
+  fun updateAndGetETA(): Long { // must be called at a constant interval
+    averageSpeed = if (averageSpeed == 0.0) lastSpeed
+    else SMOOTHINGFACTOR * lastSpeed + (1.0 - SMOOTHINGFACTOR) * averageSpeed
+    return ((totalBytes - lastKnownPos) / averageSpeed).roundToLong()
+  }
 
-   public double getAverageSpeed(){
-      return averageSpeed;
-   }
+  fun setTotalBytes(totalBytes: Long) {
+    this.totalBytes = totalBytes
+  }
 
-   public long updateAndGetETA(){ // must be called at a constant interval
-      if(averageSpeed==0.0)
-         averageSpeed=lastSpeed;
-      else
-         averageSpeed=SMOOTHING_FACTOR*lastSpeed+(1.0-SMOOTHING_FACTOR)*averageSpeed;
-      return Math.round((totalBytes-lastKnownPos)/averageSpeed);
-   }
+  fun reset() {
+    lastKnownPosTime = 0
+    lastKnownPos = 0
+    averageSpeed = 0.0
+    lastSpeed = averageSpeed
+    totalBytes = 0
+  }
 
-   public void setTotalBytes(long totalBytes){
-      this.totalBytes=totalBytes;
-   }
-
-   public void reset(){
-      lastKnownPos=lastKnownPosTime=0;
-      lastSpeed=averageSpeed=0.0;
-      totalBytes=0;
-   }
+  companion object {
+    const val SMOOTHINGFACTOR = 0.05
+  }
 }

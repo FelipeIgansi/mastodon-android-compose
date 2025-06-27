@@ -1,9 +1,3 @@
-package org.joinmastodon.android.events;
+package org.joinmastodon.android.events
 
-public class StatusDisplaySettingsChangedEvent{
-	public final String accountID;
-
-	public StatusDisplaySettingsChangedEvent(String accountID){
-		this.accountID=accountID;
-	}
-}
+class StatusDisplaySettingsChangedEvent(@JvmField val accountID: String?)
