@@ -1,14 +1,10 @@
-package org.joinmastodon.android.api.requests.instance;
+package org.joinmastodon.android.api.requests.instance
 
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.reflect.TypeToken
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Emoji
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Emoji;
-
-import java.util.List;
-
-public class GetCustomEmojis extends MastodonAPIRequest<List<Emoji>>{
-	public GetCustomEmojis(){
-		super(HttpMethod.GET, "/custom_emojis", new TypeToken<>(){});
-	}
-}
+class GetCustomEmojis : MastodonAPIRequest<MutableList<Emoji?>?>(
+  method = HttpMethod.GET,
+  path = "/custom_emojis",
+  respTypeToken = object : TypeToken<MutableList<Emoji?>?>() {})

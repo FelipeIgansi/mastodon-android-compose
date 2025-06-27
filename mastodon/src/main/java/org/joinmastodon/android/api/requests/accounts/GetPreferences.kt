@@ -4,7 +4,7 @@ import org.joinmastodon.android.api.MastodonAPIRequest
 import org.joinmastodon.android.model.Preferences
 
 class GetPreferences : MastodonAPIRequest<Preferences>(
-  HttpMethod.GET,
-  "/preferences",
-  Preferences::class.java
+  method = HttpMethod.GET,
+  path = "/preferences",
+  respClass = Preferences::class.java
 )

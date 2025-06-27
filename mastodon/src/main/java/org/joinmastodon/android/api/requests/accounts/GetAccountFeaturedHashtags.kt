@@ -10,7 +10,7 @@ class GetAccountFeaturedHashtags(id: String) :
  * enquanto o Kotlin sim, portanto coloquei para melhor compatibilidade como mutavel.
  * */
   MastodonAPIRequest<MutableList<Hashtag>>(
-    HttpMethod.GET,
-    "/accounts/$id/featured_tags",
-    object : TypeToken<MutableList<Hashtag>>() {}
+    method = HttpMethod.GET,
+    path = "/accounts/$id/featured_tags",
+    respTypeToken = object : TypeToken<MutableList<Hashtag>>() {}
   )

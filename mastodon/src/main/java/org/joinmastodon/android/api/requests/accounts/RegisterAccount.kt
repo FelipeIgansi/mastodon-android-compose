@@ -13,9 +13,9 @@ class RegisterAccount(
   inviteCode: String
 ) :
   MastodonAPIRequest<Token>(
-    HttpMethod.POST,
-    "/accounts",
-    Token::class.java
+    method = HttpMethod.POST,
+    path = "/accounts",
+    respClass = Token::class.java
   ) {
 
   init {

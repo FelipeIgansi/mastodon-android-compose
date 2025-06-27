@@ -7,9 +7,9 @@ class SetDomainBlocked(
   blocked: Boolean
 ) :
   MastodonAPIRequest<Any>(
-    if (blocked) HttpMethod.POST else HttpMethod.DELETE,
-    "/domain_blocks",
-    Any::class.java
+    method = if (blocked) HttpMethod.POST else HttpMethod.DELETE,
+    path = "/domain_blocks",
+    respClass = Any::class.java
   ) {
   init {
     setRequestBody(Request(domain))

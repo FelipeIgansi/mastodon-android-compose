@@ -5,9 +5,9 @@ import org.joinmastodon.android.model.Relationship
 
 class AcceptFollowRequest(accountID: String) :
   MastodonAPIRequest<Relationship>(
-    HttpMethod.POST,
-    "/follow_requests/$accountID/authorize",
-    Relationship::class.java
+    method = HttpMethod.POST,
+    path = "/follow_requests/$accountID/authorize",
+    respClass = Relationship::class.java
   ) {
   init {
     setRequestBody(Any())

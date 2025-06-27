@@ -4,7 +4,7 @@ import org.joinmastodon.android.api.MastodonAPIRequest
 import org.joinmastodon.android.model.Account
 
 class GetOwnAccount : MastodonAPIRequest<Account>(
-  HttpMethod.GET,
-  "/accounts/verify_credentials",
-  Account::class.java
+  method = HttpMethod.GET,
+  path = "/accounts/verify_credentials",
+  respClass = Account::class.java
 )

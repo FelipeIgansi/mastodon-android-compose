@@ -4,9 +4,9 @@ import org.joinmastodon.android.api.MastodonAPIRequest
 
 class ResendConfirmationEmail(email: String?) :
   MastodonAPIRequest<Any>(
-    HttpMethod.POST,
-    "/emails/confirmations",
-    Any::class.java
+    method = HttpMethod.POST,
+    path = "/emails/confirmations",
+    respClass = Any::class.java
   ) {
 
   init {

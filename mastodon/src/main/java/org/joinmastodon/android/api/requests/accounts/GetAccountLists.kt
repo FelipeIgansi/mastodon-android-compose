@@ -6,7 +6,7 @@ import org.joinmastodon.android.model.FollowList
 
 class GetAccountLists(id: String) :
   MastodonAPIRequest<MutableList<FollowList>>(
-    HttpMethod.GET,
-    "/accounts/$id/lists",
-    object : TypeToken<MutableList<FollowList>>() {}
-  )
+    method = HttpMethod.GET,
+    path = "/accounts/$id/lists",
+    respTypeToken = object : TypeToken<MutableList<FollowList>>() {}
+)

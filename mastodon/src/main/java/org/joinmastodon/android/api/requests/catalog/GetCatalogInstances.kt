@@ -20,9 +20,9 @@ class GetCatalogInstances(
   private val includeClosedSignups: Boolean
 ) :
   MastodonAPIRequest<MutableList<CatalogInstance>>(
-    HttpMethod.GET,
-    null,
-    object : TypeToken<MutableList<CatalogInstance>>() {}
+    method = HttpMethod.GET,
+    path = null,
+    respTypeToken = object : TypeToken<MutableList<CatalogInstance>>() {}
   ) {
 
   override fun getURL(): Uri {

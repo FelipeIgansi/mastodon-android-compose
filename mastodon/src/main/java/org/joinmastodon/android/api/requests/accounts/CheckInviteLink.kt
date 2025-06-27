@@ -6,18 +6,20 @@ import org.joinmastodon.android.model.BaseModel
 
 class CheckInviteLink(path: String) :
   MastodonAPIRequest<CheckInviteLink.Response>(
-    HttpMethod.GET, path, Response::class.java
+    method = HttpMethod.GET,
+    path = path,
+    respClass = Response::class.java
   ) {
 
   init {
     addHeader("Accept", "application/json")
   }
 
-  protected override fun getPathPrefix() = ""
+  override fun getPathPrefix() = ""
 
-  class Response (
+  class Response(
     @RequiredField
     @JvmField
     var inviteCode: String = ""
-  ): BaseModel()
+  ) : BaseModel()
 }

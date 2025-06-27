@@ -12,9 +12,9 @@ class SearchAccounts(
   following: Boolean
 ) :
   MastodonAPIRequest<MutableList<Account>>(
-    HttpMethod.GET,
-    "/accounts/search",
-    object : TypeToken<MutableList<Account>>() {}
+    method = HttpMethod.GET,
+    path = "/accounts/search",
+    respTypeToken = object : TypeToken<MutableList<Account>>() {}
   ) {
 
   init {

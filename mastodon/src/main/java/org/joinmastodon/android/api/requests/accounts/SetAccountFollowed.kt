@@ -10,9 +10,9 @@ class SetAccountFollowed(
   notify: Boolean
 ) :
   MastodonAPIRequest<Relationship>(
-    HttpMethod.POST,
-    "/accounts/$id/${ if (followed) "follow" else "unfollow" }",
-    Relationship::class.java
+    method = HttpMethod.POST,
+    path = "/accounts/$id/${if (followed) "follow" else "unfollow"}",
+    respClass = Relationship::class.java
   ) {
   init {
     if (followed) setRequestBody(Request(showReblogs, notify))

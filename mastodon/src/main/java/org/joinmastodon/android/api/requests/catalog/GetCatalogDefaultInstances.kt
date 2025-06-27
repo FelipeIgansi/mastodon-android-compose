@@ -7,9 +7,9 @@ import org.joinmastodon.android.model.catalog.CatalogDefaultInstance
 
 class GetCatalogDefaultInstances :
   MastodonAPIRequest<MutableList<CatalogDefaultInstance>>(
-    HttpMethod.GET,
-    null,
-    object : TypeToken<MutableList<CatalogDefaultInstance>>() {}
+    method = HttpMethod.GET,
+    path = null,
+    respTypeToken = object : TypeToken<MutableList<CatalogDefaultInstance>>() {}
   ) {
 
   init {

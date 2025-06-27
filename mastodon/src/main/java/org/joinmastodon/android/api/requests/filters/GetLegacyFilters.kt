@@ -1,14 +1,11 @@
-package org.joinmastodon.android.api.requests.filters;
+package org.joinmastodon.android.api.requests.filters
 
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.reflect.TypeToken
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.LegacyFilter
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.LegacyFilter;
-
-import java.util.List;
-
-public class GetLegacyFilters extends MastodonAPIRequest<List<LegacyFilter>>{
-	public GetLegacyFilters(){
-		super(HttpMethod.GET, "/filters", new TypeToken<>(){});
-	}
-}
+class GetLegacyFilters : MastodonAPIRequest<MutableList<LegacyFilter?>?>(
+  method = HttpMethod.GET,
+  path = "/filters",
+  respTypeToken = object : TypeToken<MutableList<LegacyFilter?>?>() {}
+)

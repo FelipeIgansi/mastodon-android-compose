@@ -1,9 +1,8 @@
-package org.joinmastodon.android.api.requests.lists;
+package org.joinmastodon.android.api.requests.lists
 
-import org.joinmastodon.android.api.ResultlessMastodonAPIRequest;
+import org.joinmastodon.android.api.ResultlessMastodonAPIRequest
 
-public class DeleteList extends ResultlessMastodonAPIRequest{
-	public DeleteList(String id){
-		super(HttpMethod.DELETE, "/lists/"+id);
-	}
-}
+class DeleteList(id: String?) : ResultlessMastodonAPIRequest(
+  method = HttpMethod.DELETE,
+  path = "/lists/$id"
+)

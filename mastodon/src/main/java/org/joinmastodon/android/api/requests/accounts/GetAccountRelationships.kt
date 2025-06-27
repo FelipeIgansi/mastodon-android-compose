@@ -6,9 +6,9 @@ import org.joinmastodon.android.model.Relationship
 
 class GetAccountRelationships(ids: Collection<String>) :
   MastodonAPIRequest<MutableList<Relationship>>(
-    HttpMethod.GET,
-    "/accounts/relationships",
-    object : TypeToken<MutableList<Relationship>>() {}) {
+    method = HttpMethod.GET,
+    path = "/accounts/relationships",
+    respTypeToken = object : TypeToken<MutableList<Relationship>>() {}) {
   init {
     ids.forEach { id ->
       addQueryParameter("id[]", id)

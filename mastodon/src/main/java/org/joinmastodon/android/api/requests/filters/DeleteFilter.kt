@@ -1,14 +1,13 @@
-package org.joinmastodon.android.api.requests.filters;
+package org.joinmastodon.android.api.requests.filters
 
-import org.joinmastodon.android.api.ResultlessMastodonAPIRequest;
+import org.joinmastodon.android.api.ResultlessMastodonAPIRequest
 
-public class DeleteFilter extends ResultlessMastodonAPIRequest{
-	public DeleteFilter(String id){
-		super(HttpMethod.DELETE, "/filters/"+id);
-	}
-
-	@Override
-	protected String getPathPrefix(){
-		return "/api/v2";
-	}
+class DeleteFilter(id: String?) :
+  ResultlessMastodonAPIRequest(
+    method = HttpMethod.DELETE,
+    path = "/filters/$id"
+  ) {
+  override fun getPathPrefix(): String {
+    return "/api/v2"
+  }
 }

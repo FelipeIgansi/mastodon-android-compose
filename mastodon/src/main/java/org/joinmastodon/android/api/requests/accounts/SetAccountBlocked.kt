@@ -8,9 +8,9 @@ class SetAccountBlocked(
   blocked: Boolean
 ) :
   MastodonAPIRequest<Relationship>(
-    HttpMethod.POST,
-    "/accounts/$id/${ if (blocked) "block" else "unblock" }",
-    Relationship::class.java
+    method = HttpMethod.POST,
+    path = "/accounts/$id/${if (blocked) "block" else "unblock"}",
+    respClass = Relationship::class.java
   ) {
   init {
     setRequestBody(Any())

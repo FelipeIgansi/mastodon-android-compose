@@ -10,9 +10,9 @@ class GetAccountFamiliarFollowers(ids: Collection<String>) :
  * enquanto o Kotlin sim, portanto coloquei para melhor compatibilidade como mutavel.
  * */
   MastodonAPIRequest<MutableList<FamiliarFollowers>>(
-    HttpMethod.GET,
-    "/accounts/familiar_followers",
-    object : TypeToken<MutableList<FamiliarFollowers>>() {}) {
+    method = HttpMethod.GET,
+    path = "/accounts/familiar_followers",
+    respTypeToken = object : TypeToken<MutableList<FamiliarFollowers>>() {}) {
   init {
     ids.forEach { id ->
       addQueryParameter("id[]", id)

@@ -6,9 +6,9 @@ import org.joinmastodon.android.model.FollowSuggestion
 
 class GetFollowSuggestions(limit: Int) :
   MastodonAPIRequest<MutableList<FollowSuggestion>>(
-    HttpMethod.GET,
-    "/suggestions",
-    object : TypeToken<MutableList<FollowSuggestion>>() {}
+    method = HttpMethod.GET,
+    path = "/suggestions",
+    respTypeToken = object : TypeToken<MutableList<FollowSuggestion>>() {}
   ) {
 
   init {
@@ -16,5 +16,5 @@ class GetFollowSuggestions(limit: Int) :
   }
 
   // Mantive o protected para manter o mesma lógica do código original
-  protected override fun getPathPrefix() = "/api/v2"
+  override fun getPathPrefix() = "/api/v2"
 }

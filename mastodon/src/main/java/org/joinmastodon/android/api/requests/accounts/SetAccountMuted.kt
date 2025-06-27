@@ -8,9 +8,9 @@ class SetAccountMuted(
   muted: Boolean
 ) :
   MastodonAPIRequest<Relationship>(
-    HttpMethod.POST,
-    "/accounts/$id/${if (muted) "mute" else "unmute"}",
-    Relationship::class.java
+    method = HttpMethod.POST,
+    path = "/accounts/$id/${if (muted) "mute" else "unmute"}",
+    respClass = Relationship::class.java
   ) {
   init {
     setRequestBody(Any())
