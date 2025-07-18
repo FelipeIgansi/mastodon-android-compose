@@ -1,7 +1,7 @@
 package org.joinmastodon.android.api
 
 class MastodonDetailedErrorResponse(
-    error: String?,
+    error: String,
     httpStatus: Int,
     exception: Throwable?
 ) : MastodonErrorResponse(error, httpStatus, exception) {
