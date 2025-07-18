@@ -1,10 +1,10 @@
-package org.joinmastodon.android.api.requests.instance;
+package org.joinmastodon.android.api.requests.instance
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.InstanceV1;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.InstanceV1
 
-public class GetInstanceV1 extends MastodonAPIRequest<InstanceV1>{
-	public GetInstanceV1(){
-		super(HttpMethod.GET, "/instance", InstanceV1.class);
-	}
-}
+class GetInstanceV1 : MastodonAPIRequest<InstanceV1>(
+    method = HttpMethod.GET,
+    path = "/instance",
+    respClass = InstanceV1::class.java
+)
