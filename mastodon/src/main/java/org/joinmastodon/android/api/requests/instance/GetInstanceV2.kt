@@ -1,15 +1,12 @@
-package org.joinmastodon.android.api.requests.instance;
+package org.joinmastodon.android.api.requests.instance
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.InstanceV2;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.InstanceV2
 
-public class GetInstanceV2 extends MastodonAPIRequest<InstanceV2>{
-	public GetInstanceV2(){
-		super(HttpMethod.GET, "/instance", InstanceV2.class);
-	}
-
-	@Override
-	protected String getPathPrefix(){
-		return "/api/v2";
-	}
+class GetInstanceV2 : MastodonAPIRequest<InstanceV2>(
+    method = HttpMethod.GET,
+    path = "/instance",
+    respClass = InstanceV2::class.java
+) {
+    override fun getPathPrefix() = "/api/v2"
 }
