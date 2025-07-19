@@ -1,23 +1,26 @@
-package org.joinmastodon.android.api.requests.lists;
+package org.joinmastodon.android.api.requests.lists
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.FollowList;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.FollowList
+import org.joinmastodon.android.model.FollowList.RepliesPolicy
 
-public class CreateList extends MastodonAPIRequest<FollowList>{
-	public CreateList(String title, FollowList.RepliesPolicy repliesPolicy, boolean exclusive){
-		super(HttpMethod.POST, "/lists", FollowList.class);
-		setRequestBody(new Request(title, repliesPolicy, exclusive));
-	}
+class CreateList(
+    title: String,
+    repliesPolicy: RepliesPolicy,
+    exclusive: Boolean
+) : MastodonAPIRequest<FollowList>(
+    method = HttpMethod.POST,
+    path = "/lists",
+    respClass = FollowList::class.java
+) {
 
-	private static class Request{
-		public String title;
-		public FollowList.RepliesPolicy repliesPolicy;
-		public boolean exclusive;
+    init {
+        setRequestBody(Request(title, repliesPolicy, exclusive))
+    }
 
-		public Request(String title, FollowList.RepliesPolicy repliesPolicy, boolean exclusive){
-			this.title=title;
-			this.repliesPolicy=repliesPolicy;
-			this.exclusive=exclusive;
-		}
-	}
+    private data class Request(
+        val title: String,
+        val repliesPolicy: RepliesPolicy,
+        val exclusive: Boolean
+    )
 }
