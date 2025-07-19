@@ -1,21 +1,17 @@
-package org.joinmastodon.android.api.requests.polls;
+package org.joinmastodon.android.api.requests.polls
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Poll;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Poll
 
-import java.util.List;
+class SubmitPollVote(pollID: String, choices: List<Int>) :
+    MastodonAPIRequest<Poll>(
+        method = HttpMethod.POST,
+        path = "/polls/$pollID/votes",
+        respClass = Poll::class.java
+    ) {
+    init {
+        setRequestBody(Body(choices))
+    }
 
-public class SubmitPollVote extends MastodonAPIRequest<Poll>{
-	public SubmitPollVote(String pollID, List<Integer> choices){
-		super(HttpMethod.POST, "/polls/"+pollID+"/votes", Poll.class);
-		setRequestBody(new Body(choices));
-	}
-
-	private static class Body{
-		public List<Integer> choices;
-
-		public Body(List<Integer> choices){
-			this.choices=choices;
-		}
-	}
+    private data class Body(val choices: List<Int>)
 }
