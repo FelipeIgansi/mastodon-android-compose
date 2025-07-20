@@ -1,13 +1,15 @@
-package org.joinmastodon.android.api.requests.statuses;
+package org.joinmastodon.android.api.requests.statuses
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Translation;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Translation
 
-import java.util.Map;
-
-public class TranslateStatus extends MastodonAPIRequest<Translation>{
-	public TranslateStatus(String id, String lang){
-		super(HttpMethod.POST, "/statuses/"+id+"/translate", Translation.class);
-		setRequestBody(Map.of("lang", lang));
-	}
+class TranslateStatus(id: String, lang: String) :
+  MastodonAPIRequest<Translation>(
+    method = HttpMethod.POST,
+    path = "/statuses/$id/translate",
+    respClass = Translation::class.java
+  ) {
+  init {
+    setRequestBody(mapOf("lang" to lang))
+  }
 }
