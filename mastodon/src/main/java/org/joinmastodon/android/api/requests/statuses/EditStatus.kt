@@ -1,11 +1,16 @@
-package org.joinmastodon.android.api.requests.statuses;
+package org.joinmastodon.android.api.requests.statuses
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Status;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.api.requests.statuses.CreateStatus.Request
+import org.joinmastodon.android.model.Status
 
-public class EditStatus extends MastodonAPIRequest<Status>{
-	public EditStatus(CreateStatus.Request req, String id){
-		super(HttpMethod.PUT, "/statuses/"+id, Status.class);
-		setRequestBody(req);
-	}
+class EditStatus(req: Request, id: String) :
+  MastodonAPIRequest<Status>(
+    method = HttpMethod.PUT,
+    path = "/statuses/$id",
+    respClass = Status::class.java
+  ) {
+  init {
+    setRequestBody(req)
+  }
 }
