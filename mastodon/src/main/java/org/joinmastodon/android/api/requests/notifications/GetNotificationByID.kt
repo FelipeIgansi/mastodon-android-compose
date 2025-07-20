@@ -1,10 +1,11 @@
-package org.joinmastodon.android.api.requests.notifications;
+package org.joinmastodon.android.api.requests.notifications
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Notification;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Notification
 
-public class GetNotificationByID extends MastodonAPIRequest<Notification>{
-	public GetNotificationByID(String id){
-		super(HttpMethod.GET, "/notifications/"+id, Notification.class);
-	}
-}
+class GetNotificationByID(id: String) :
+    MastodonAPIRequest<Notification>(
+        method = HttpMethod.GET,
+        path = "/notifications/$id",
+        respClass = Notification::class.java
+    )
