@@ -1,69 +1,92 @@
-package org.joinmastodon.android.api.requests.notifications;
+package org.joinmastodon.android.api.requests.notifications
 
-import android.text.TextUtils;
+import org.joinmastodon.android.api.AllFieldsAreRequired
+import org.joinmastodon.android.api.ApiUtils.enumSetToStrings
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.api.ObjectValidationException
+import org.joinmastodon.android.api.requests.notifications.GetNotificationsV2.GroupedNotificationsResults
+import org.joinmastodon.android.model.Account
+import org.joinmastodon.android.model.BaseModel
+import org.joinmastodon.android.model.NotificationGroup
+import org.joinmastodon.android.model.NotificationType
+import org.joinmastodon.android.model.Status
+import java.util.EnumSet
 
-import org.joinmastodon.android.api.AllFieldsAreRequired;
-import org.joinmastodon.android.api.ApiUtils;
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.api.ObjectValidationException;
-import org.joinmastodon.android.model.Account;
-import org.joinmastodon.android.model.BaseModel;
-import org.joinmastodon.android.model.NotificationGroup;
-import org.joinmastodon.android.model.NotificationType;
-import org.joinmastodon.android.model.Status;
+class GetNotificationsV2 @JvmOverloads constructor(
+  maxID: String?,
+  limit: Int,
+  includeTypes: EnumSet<NotificationType>?,
+  groupedTypes: EnumSet<NotificationType>?,
+  onlyAccountID: String? = null
+) : MastodonAPIRequest<GroupedNotificationsResults>(
+    method = HttpMethod.GET,
+    path = "/notifications",
+    respClass = GroupedNotificationsResults::class.java
+  ) {
+  init {
+    if (maxID != null) addQueryParameter("max_id", maxID)
+    if (limit > 0) addQueryParameter("limit", limit.toString())
 
-import java.util.EnumSet;
-import java.util.List;
+    includeTypes?.let { types ->
 
-public class GetNotificationsV2 extends MastodonAPIRequest<GetNotificationsV2.GroupedNotificationsResults>{
-	public GetNotificationsV2(String maxID, int limit, EnumSet<NotificationType> includeTypes, EnumSet<NotificationType> groupedTypes){
-		this(maxID, limit, includeTypes, groupedTypes, null);
-	}
+      enumSetToStrings(types, NotificationType::class.java)
+        .forEach { typeName ->
+          addQueryParameter("types[]", typeName)
+        }
 
-	public GetNotificationsV2(String maxID, int limit, EnumSet<NotificationType> includeTypes, EnumSet<NotificationType> groupedTypes, String onlyAccountID){
-		super(HttpMethod.GET, "/notifications", GroupedNotificationsResults.class);
-		if(maxID!=null)
-			addQueryParameter("max_id", maxID);
-		if(limit>0)
-			addQueryParameter("limit", ""+limit);
-		if(includeTypes!=null){
-			for(String type:ApiUtils.enumSetToStrings(includeTypes, NotificationType.class)){
-				addQueryParameter("types[]", type);
-			}
-			for(String type:ApiUtils.enumSetToStrings(EnumSet.complementOf(includeTypes), NotificationType.class)){
-				addQueryParameter("exclude_types[]", type);
-			}
-		}
-		if(groupedTypes!=null){
-			for(String type:ApiUtils.enumSetToStrings(groupedTypes, NotificationType.class)){
-				addQueryParameter("grouped_types[]", type);
-			}
-		}
-		if(!TextUtils.isEmpty(onlyAccountID))
-			addQueryParameter("account_id", onlyAccountID);
-		removeUnsupportedItems=true;
-	}
 
-	@Override
-	protected String getPathPrefix(){
-		return "/api/v2";
-	}
+      enumSetToStrings(EnumSet.complementOf(types), NotificationType::class.java)
+        .forEach { excludedTypeName ->
+          addQueryParameter("exclude_types[]", excludedTypeName)
+        }
 
-	@AllFieldsAreRequired
-	public static class GroupedNotificationsResults extends BaseModel{
-		public List<Account> accounts;
-		public List<Status> statuses;
-		public List<NotificationGroup> notificationGroups;
+    }
 
-		@Override
-		public void postprocess() throws ObjectValidationException{
-			super.postprocess();
-			for(Account acc:accounts)
-				acc.postprocess();
-			for(Status s:statuses)
-				s.postprocess();
-			for(NotificationGroup ng:notificationGroups)
-				ng.postprocess();
-		}
-	}
+    groupedTypes?.let { types ->
+
+      enumSetToStrings(types, NotificationType::class.java)
+        .forEach { typeNames ->
+          addQueryParameter("grouped_types[]", typeNames)
+        }
+
+    }
+
+
+    if (!onlyAccountID.isNullOrEmpty()) {
+      addQueryParameter("account_id", onlyAccountID)
+    }
+
+    removeUnsupportedItems = true
+  }
+
+  override fun getPathPrefix() = "/api/v2"
+
+
+  @AllFieldsAreRequired
+  class GroupedNotificationsResults : BaseModel() {
+    @JvmField
+    @JvmSuppressWildcards
+    var accounts: List<Account> = emptyList()
+
+    @JvmField
+    @JvmSuppressWildcards
+    var statuses: List<Status> = emptyList()
+
+    @JvmField
+    @JvmSuppressWildcards
+    var notificationGroups: List<NotificationGroup> = emptyList()
+
+    /**
+    * suppression added, as the callback was capturing a generic, and not understanding the correct value
+    * due to kotlin's automatic wildcard assignment
+   */
+
+    @Throws(ObjectValidationException::class)
+    override fun postprocess() {
+      super.postprocess()
+      accounts.forEach { it.postprocess() }
+      statuses.forEach { it.postprocess() }
+      notificationGroups.forEach { it.postprocess() }
+    }
+  }
 }
