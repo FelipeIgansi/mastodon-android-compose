@@ -1,42 +1,48 @@
-package org.joinmastodon.android.api.requests.oauth;
+package org.joinmastodon.android.api.requests.oauth
 
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.SerializedName
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.api.session.AccountSessionManager.SCOPE
+import org.joinmastodon.android.api.session.AccountSessionManager.REDIRECT_URI
+import org.joinmastodon.android.model.Token
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.api.session.AccountSessionManager;
-import org.joinmastodon.android.model.Token;
+class GetOauthToken(
+  clientID: String,
+  clientSecret: String,
+  code: String?,
+  grantType: GrantType
+) :  MastodonAPIRequest<Token>(
+    method = HttpMethod.POST,
+    path = "/oauth/token",
+    respClass = Token::class.java
+  ) {
+  init {
+    setRequestBody(
+      Request(
+        clientID,
+        clientSecret,
+        code,
+        grantType
+      )
+    )
+  }
 
-public class GetOauthToken extends MastodonAPIRequest<Token>{
-	public GetOauthToken(String clientID, String clientSecret, String code, GrantType grantType){
-		super(HttpMethod.POST, "/oauth/token", Token.class);
-		setRequestBody(new Request(clientID, clientSecret, code, grantType));
-	}
+  override fun getPathPrefix() = ""
 
-	@Override
-	protected String getPathPrefix(){
-		return "";
-	}
+  private data class Request(
+    val clientId: String,
+    val clientSecret: String,
+    val code: String?,
+    val grantType: GrantType,
+    val redirectUri: String = REDIRECT_URI,
+    val scope: String = SCOPE
+  )
 
-	private static class Request{
-		public GrantType grantType;
-		public String clientId;
-		public String clientSecret;
-		public String redirectUri=AccountSessionManager.REDIRECT_URI;
-		public String scope=AccountSessionManager.SCOPE;
-		public String code;
+  enum class GrantType {
+    @SerializedName("authorization_code")
+    AUTHORIZATION_CODE,
 
-		public Request(String clientId, String clientSecret, String code, GrantType grantType){
-			this.clientId=clientId;
-			this.clientSecret=clientSecret;
-			this.code=code;
-			this.grantType=grantType;
-		}
-	}
-
-	public enum GrantType{
-		@SerializedName("authorization_code")
-		AUTHORIZATION_CODE,
-		@SerializedName("client_credentials")
-		CLIENT_CREDENTIALS
-	}
+    @SerializedName("client_credentials")
+    CLIENT_CREDENTIALS
+  }
 }
