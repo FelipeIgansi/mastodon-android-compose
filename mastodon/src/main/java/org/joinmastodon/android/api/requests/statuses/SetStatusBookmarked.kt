@@ -1,11 +1,15 @@
-package org.joinmastodon.android.api.requests.statuses;
+package org.joinmastodon.android.api.requests.statuses
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Status;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Status
 
-public class SetStatusBookmarked extends MastodonAPIRequest<Status>{
-	public SetStatusBookmarked(String id, boolean bookmarked){
-		super(HttpMethod.POST, "/statuses/"+id+"/"+(bookmarked ? "bookmark" : "unbookmark"), Status.class);
-		setRequestBody(new Object());
-	}
+class SetStatusBookmarked(id: String, bookmarked: Boolean) :
+  MastodonAPIRequest<Status>(
+    method = HttpMethod.POST,
+    path = "/statuses/$id/${if (bookmarked) "bookmark" else "unbookmark"}",
+    respClass = Status::class.java
+  ) {
+  init {
+    setRequestBody(Any())
+  }
 }
