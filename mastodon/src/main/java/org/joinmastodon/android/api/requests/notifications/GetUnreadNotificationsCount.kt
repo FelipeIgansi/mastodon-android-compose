@@ -1,35 +1,48 @@
-package org.joinmastodon.android.api.requests.notifications;
+package org.joinmastodon.android.api.requests.notifications
 
-import org.joinmastodon.android.api.ApiUtils;
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.NotificationType;
+import org.joinmastodon.android.api.ApiUtils.enumSetToStrings
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.NotificationType
+import java.util.EnumSet
 
-import java.util.EnumSet;
+class GetUnreadNotificationsCount(
+  includeTypes: EnumSet<NotificationType>?,
+  groupedTypes: EnumSet<NotificationType>?
+) : MastodonAPIRequest<GetUnreadNotificationsCount.Response>(
+  method = HttpMethod.GET,
+  path = "/notifications/unread_count",
+  respClass = Response::class.java
+) {
+  init {
 
-public class GetUnreadNotificationsCount extends MastodonAPIRequest<GetUnreadNotificationsCount.Response>{
-	public GetUnreadNotificationsCount(EnumSet<NotificationType> includeTypes, EnumSet<NotificationType> groupedTypes){
-		super(HttpMethod.GET, "/notifications/unread_count", Response.class);
-		if(includeTypes!=null){
-			for(String type: ApiUtils.enumSetToStrings(includeTypes, NotificationType.class)){
-				addQueryParameter("types[]", type);
-			}
-			for(String type:ApiUtils.enumSetToStrings(EnumSet.complementOf(includeTypes), NotificationType.class)){
-				addQueryParameter("exclude_types[]", type);
-			}
-		}
-		if(groupedTypes!=null){
-			for(String type:ApiUtils.enumSetToStrings(groupedTypes, NotificationType.class)){
-				addQueryParameter("grouped_types[]", type);
-			}
-		}
-	}
+    includeTypes?.let { includedSet ->
 
-	@Override
-	protected String getPathPrefix(){
-		return "/api/v2";
-	}
+      enumSetToStrings(includedSet, NotificationType::class.java)
+        .forEach { includedTypeName ->
+          addQueryParameter("types[]", includedTypeName)
+        }
 
-	public static class Response{
-		public int count;
-	}
+      enumSetToStrings(EnumSet.complementOf(includedSet), NotificationType::class.java)
+        .forEach { excludedTypeName ->
+          addQueryParameter("exclude_types[]", excludedTypeName)
+        }
+    }
+
+    groupedTypes?.let { groupSet ->
+
+      enumSetToStrings(groupSet, NotificationType::class.java)
+        .forEach { groupedName ->
+          addQueryParameter("grouped_types[]", groupedName)
+        }
+
+    }
+  }
+
+  override fun getPathPrefix() = "/api/v2"
+
+
+  class Response {
+    @JvmField
+    var count: Int = 0
+  }
 }
