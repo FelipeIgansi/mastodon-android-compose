@@ -1,38 +1,49 @@
-package org.joinmastodon.android.api.requests.notifications;
+package org.joinmastodon.android.api.requests.notifications
 
-import android.text.TextUtils;
+import com.google.gson.reflect.TypeToken
+import org.joinmastodon.android.api.ApiUtils.enumSetToStrings
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Notification
+import org.joinmastodon.android.model.NotificationType
+import java.util.EnumSet
 
-import com.google.gson.reflect.TypeToken;
+class GetNotificationsV1 @JvmOverloads constructor(
+    maxID: String?,
+    limit: Int,
+    includeTypes: EnumSet<NotificationType>?,
+    onlyAccountID: String? = null
+) : MastodonAPIRequest<@JvmSuppressWildcards List<Notification>>(
+    method = HttpMethod.GET,
+    path = "/notifications",
+    respTypeToken = object : TypeToken<List<Notification>>() {}
+) {
+    /**
+    suppression added, as the callback was capturing a generic, and not understanding the correct value
+    due to kotlin's automatic wildcard assignment*/
+    init {
+        if (maxID != null) addQueryParameter("max_id", maxID)
+        if (limit > 0) addQueryParameter("limit", limit.toString())
 
-import org.joinmastodon.android.api.ApiUtils;
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Notification;
-import org.joinmastodon.android.model.NotificationType;
+        includeTypes?.let { types ->
+            enumSetToStrings(
+                types,
+                NotificationType::class.java
+            ).forEach { typeName ->
+                addQueryParameter("types[]", typeName)
+            }
 
-import java.util.EnumSet;
-import java.util.List;
+            enumSetToStrings(
+                EnumSet.complementOf(types),
+                NotificationType::class.java
+            ).forEach { excludedTypeName ->
+                addQueryParameter("exclude_types[]", excludedTypeName)
+            }
+        }
 
-public class GetNotificationsV1 extends MastodonAPIRequest<List<Notification>>{
-	public GetNotificationsV1(String maxID, int limit, EnumSet<NotificationType> includeTypes){
-		this(maxID, limit, includeTypes, null);
-	}
+        if (!onlyAccountID.isNullOrEmpty()) {
+            addQueryParameter("account_id", onlyAccountID)
+        }
 
-	public GetNotificationsV1(String maxID, int limit, EnumSet<NotificationType> includeTypes, String onlyAccountID){
-		super(HttpMethod.GET, "/notifications", new TypeToken<>(){});
-		if(maxID!=null)
-			addQueryParameter("max_id", maxID);
-		if(limit>0)
-			addQueryParameter("limit", ""+limit);
-		if(includeTypes!=null){
-			for(String type:ApiUtils.enumSetToStrings(includeTypes, NotificationType.class)){
-				addQueryParameter("types[]", type);
-			}
-			for(String type:ApiUtils.enumSetToStrings(EnumSet.complementOf(includeTypes), NotificationType.class)){
-				addQueryParameter("exclude_types[]", type);
-			}
-		}
-		if(!TextUtils.isEmpty(onlyAccountID))
-			addQueryParameter("account_id", onlyAccountID);
-		removeUnsupportedItems=true;
-	}
+        removeUnsupportedItems = true
+    }
 }
