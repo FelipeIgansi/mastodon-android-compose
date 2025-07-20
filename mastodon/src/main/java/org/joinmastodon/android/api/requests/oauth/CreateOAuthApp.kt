@@ -1,19 +1,23 @@
-package org.joinmastodon.android.api.requests.oauth;
+package org.joinmastodon.android.api.requests.oauth
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.api.session.AccountSessionManager;
-import org.joinmastodon.android.model.Application;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.api.session.AccountSessionManager.SCOPE
+import org.joinmastodon.android.api.session.AccountSessionManager.REDIRECT_URI
+import org.joinmastodon.android.model.Application
 
-public class CreateOAuthApp extends MastodonAPIRequest<Application>{
-	public CreateOAuthApp(){
-		super(HttpMethod.POST, "/apps", Application.class);
-		setRequestBody(new Request());
-	}
+class CreateOAuthApp : MastodonAPIRequest<Application>(
+  method = HttpMethod.POST,
+  path = "/apps",
+  respClass = Application::class.java
+) {
+  init {
+    setRequestBody(Request())
+  }
 
-	private static class Request{
-		public String clientName="Mastodon for Android";
-		public String redirectUris=AccountSessionManager.REDIRECT_URI;
-		public String scopes=AccountSessionManager.SCOPE;
-		public String website="https://app.joinmastodon.org/android";
-	}
+  private data class Request (
+    val clientName: String = "Mastodon for Android",
+    val redirectUris: String = REDIRECT_URI,
+    val scopes: String = SCOPE,
+    val website: String = "https://app.joinmastodon.org/android"
+  )
 }
