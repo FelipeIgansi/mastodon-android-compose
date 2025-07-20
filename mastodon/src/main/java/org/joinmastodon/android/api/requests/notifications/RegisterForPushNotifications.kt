@@ -1,37 +1,48 @@
-package org.joinmastodon.android.api.requests.notifications;
+package org.joinmastodon.android.api.requests.notifications
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.PushSubscription;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.PushSubscription
+import org.joinmastodon.android.model.PushSubscription.Alerts
 
-public class RegisterForPushNotifications extends MastodonAPIRequest<PushSubscription>{
-	public RegisterForPushNotifications(String deviceToken, String encryptionKey, String authKey, PushSubscription.Alerts alerts, PushSubscription.Policy policy, String accountID){
-		super(HttpMethod.POST, "/push/subscription", PushSubscription.class);
-		Request r=new Request();
-		r.subscription.endpoint="https://app.joinmastodon.org/relay-to/fcm/"+deviceToken+"/"+accountID;
-		r.data.alerts=alerts;
-		r.policy=policy;
-		r.subscription.keys.p256dh=encryptionKey;
-		r.subscription.keys.auth=authKey;
-		setRequestBody(r);
-	}
+class RegisterForPushNotifications(
+  deviceToken: String,
+  encryptionKey: String,
+  authKey: String,
+  alerts: Alerts,
+  policy: PushSubscription.Policy?,
+  accountID: String
+) : MastodonAPIRequest<PushSubscription>(
+  method = HttpMethod.POST,
+  path = "/push/subscription",
+  respClass = PushSubscription::class.java
+) {
+  init {
+    setRequestBody(Request().apply {
+      this.subscription.endpoint = "https://app.joinmastodon.org/relay-to/fcm/$deviceToken/$accountID"
+      this.data.alerts = alerts
+      this.policy = policy
+      this.subscription.keys.p256dh = encryptionKey
+      this.subscription.keys.auth = authKey
+    })
+  }
 
-	private static class Request{
-		public Subscription subscription=new Subscription();
-		public Data data=new Data();
-		public PushSubscription.Policy policy;
+  private class Request {
+    var subscription: Subscription = Subscription()
+    var data: Data = Data()
+    var policy: PushSubscription.Policy? = null
 
-		private static class Keys{
-			public String p256dh;
-			public String auth;
-		}
+    class Keys {
+      var p256dh: String = ""
+      var auth: String = ""
+    }
 
-		private static class Subscription{
-			public String endpoint;
-			public Keys keys=new Keys();
-		}
+    class Subscription {
+      var endpoint: String = ""
+      var keys: Keys = Keys()
+    }
 
-		private static class Data{
-			public PushSubscription.Alerts alerts;
-		}
-	}
+    class Data {
+      var alerts: Alerts? = null
+    }
+  }
 }
