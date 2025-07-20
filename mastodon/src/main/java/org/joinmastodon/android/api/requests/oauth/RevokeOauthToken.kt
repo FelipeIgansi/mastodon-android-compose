@@ -1,25 +1,25 @@
-package org.joinmastodon.android.api.requests.oauth;
+package org.joinmastodon.android.api.requests.oauth
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
+import org.joinmastodon.android.api.MastodonAPIRequest
 
-public class RevokeOauthToken extends MastodonAPIRequest<Object>{
-	public RevokeOauthToken(String clientID, String clientSecret, String token){
-		super(HttpMethod.POST, "/oauth/revoke", Object.class);
-		setRequestBody(new Body(clientID, clientSecret, token));
-	}
+class RevokeOauthToken(
+  clientID: String,
+  clientSecret: String,
+  token: String
+) : MastodonAPIRequest<Any>(
+  method = HttpMethod.POST,
+  path = "/oauth/revoke",
+  respClass = Any::class.java
+) {
+  init {
+    setRequestBody(Body(clientID, clientSecret, token))
+  }
 
-	@Override
-	protected String getPathPrefix(){
-		return "";
-	}
+  override fun getPathPrefix() = ""
 
-	private static class Body{
-		public String clientId, clientSecret, token;
-
-		public Body(String clientId, String clientSecret, String token){
-			this.clientId=clientId;
-			this.clientSecret=clientSecret;
-			this.token=token;
-		}
-	}
+  private data class Body(
+    val clientId: String,
+    val clientSecret: String,
+    val token: String
+  )
 }
