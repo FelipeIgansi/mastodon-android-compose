@@ -1,38 +1,47 @@
-package org.joinmastodon.android.api.requests.notifications;
+package org.joinmastodon.android.api.requests.notifications
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.PushSubscription;
+import okhttp3.Response
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.PushSubscription
+import org.joinmastodon.android.model.PushSubscription.*
+import java.io.IOException
 
-import java.io.IOException;
+class UpdatePushSettings(alerts: Alerts, policy: Policy) :
+  MastodonAPIRequest<PushSubscription>(
+    method = HttpMethod.PUT,
+    path = "/push/subscription",
+    respClass = PushSubscription::class.java
+  ) {
+  private val policy: Policy
 
-import okhttp3.Response;
+  init {
+    setRequestBody(Request(alerts, policy))
+    this.policy = policy
+  }
 
-public class UpdatePushSettings extends MastodonAPIRequest<PushSubscription>{
-	private final PushSubscription.Policy policy;
+  @Throws(IOException::class)
+  override fun validateAndPostprocessResponse(
+    respObj: PushSubscription,
+    httpResponse: Response
+  ) {
+    super.validateAndPostprocessResponse(respObj, httpResponse)
+    respObj.policy = policy
+  }
 
-	public UpdatePushSettings(PushSubscription.Alerts alerts, PushSubscription.Policy policy){
-		super(HttpMethod.PUT, "/push/subscription", PushSubscription.class);
-		setRequestBody(new Request(alerts, policy));
-		this.policy=policy;
-	}
+  private class Request(
+    alerts: Alerts,
+    policy: Policy
+  ) {
+    var data: Data = Data()
+    var policy: Policy
 
-	@Override
-	public void validateAndPostprocessResponse(PushSubscription respObj, Response httpResponse) throws IOException{
-		super.validateAndPostprocessResponse(respObj, httpResponse);
-		respObj.policy=policy;
-	}
+    init {
+      this.data.alerts = alerts
+      this.policy = policy
+    }
 
-	private static class Request{
-		public Data data=new Data();
-		public PushSubscription.Policy policy;
-
-		public Request(PushSubscription.Alerts alerts, PushSubscription.Policy policy){
-			this.data.alerts=alerts;
-			this.policy=policy;
-		}
-
-		private static class Data{
-			public PushSubscription.Alerts alerts;
-		}
-	}
+    private class Data {
+      var alerts: Alerts? = null
+    }
+  }
 }
