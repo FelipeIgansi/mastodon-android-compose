@@ -1,11 +1,15 @@
-package org.joinmastodon.android.api.requests.statuses;
+package org.joinmastodon.android.api.requests.statuses
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Status;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Status
 
-public class SetStatusConversationMuted extends MastodonAPIRequest<Status>{
-	public SetStatusConversationMuted(String id, boolean muted){
-		super(HttpMethod.POST, "/statuses/"+id+(muted ? "/mute" : "/unmute"), Status.class);
-		setRequestBody(new Object());
-	}
+class SetStatusConversationMuted(id: String, muted: Boolean) :
+  MastodonAPIRequest<Status>(
+    method = HttpMethod.POST,
+    path = "/statuses/$id${if (muted) "/mute" else "/unmute"}",
+    respClass = Status::class.java
+  ) {
+  init {
+    setRequestBody(Any())
+  }
 }
