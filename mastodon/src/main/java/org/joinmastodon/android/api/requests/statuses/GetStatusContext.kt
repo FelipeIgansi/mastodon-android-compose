@@ -1,10 +1,11 @@
-package org.joinmastodon.android.api.requests.statuses;
+package org.joinmastodon.android.api.requests.statuses
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.StatusContext;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.StatusContext
 
-public class GetStatusContext extends MastodonAPIRequest<StatusContext>{
-	public GetStatusContext(String id){
-		super(HttpMethod.GET, "/statuses/"+id+"/context", StatusContext.class);
-	}
-}
+class GetStatusContext(id: String) :
+  MastodonAPIRequest<StatusContext>(
+    method = HttpMethod.GET,
+    path = "/statuses/$id/context",
+    respClass = StatusContext::class.java
+  )
