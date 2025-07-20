@@ -1,30 +1,40 @@
-package org.joinmastodon.android.api.requests.reports;
+package org.joinmastodon.android.api.requests.reports
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.ReportReason;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.ReportReason
 
-import java.util.Collections;
-import java.util.List;
+class SendReport(
+    accountID: String,
+    reason: ReportReason,
+    statusIDs: List<String>?,
+    ruleIDs: List<String>?,
+    comment: String?,
+    forward: Boolean
+) :
+    MastodonAPIRequest<Any>(
+        method = HttpMethod.POST,
+        path = "/reports",
+        respClass = Any::class.java
+    ) {
+    init {
+        setRequestBody(
+            Body(
+                accountId = accountID,
+                statusIds = statusIDs ?: emptyList(),
+                comment = comment ?: "",
+                forward = forward,
+                category = reason,
+                ruleIds = ruleIDs ?: emptyList()
+            )
+        )
+    }
 
-public class SendReport extends MastodonAPIRequest<Object>{
-	public SendReport(String accountID, ReportReason reason, List<String> statusIDs, List<String> ruleIDs, String comment, boolean forward){
-		super(HttpMethod.POST, "/reports", Object.class);
-		Body b=new Body();
-		b.accountId=accountID;
-		b.statusIds=statusIDs;
-		b.comment=comment;
-		b.forward=forward;
-		b.category=reason;
-		b.ruleIds=ruleIDs;
-		setRequestBody(b);
-	}
-
-	private static class Body{
-		public String accountId;
-		public List<String> statusIds;
-		public String comment;
-		public boolean forward;
-		public ReportReason category;
-		public List<String> ruleIds;
-	}
+    private data class Body(
+        val accountId: String,
+        val statusIds: List<String>,
+        val comment: String,
+        val forward: Boolean,
+        val category: ReportReason,
+        val ruleIds: List<String>
+    )
 }
