@@ -1,19 +1,17 @@
-package org.joinmastodon.android.api.requests.statuses;
+package org.joinmastodon.android.api.requests.statuses
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Attachment;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Attachment
 
-public class UpdateAttachment extends MastodonAPIRequest<Attachment>{
-	public UpdateAttachment(String id, String description){
-		super(HttpMethod.PUT, "/media/"+id, Attachment.class);
-		setRequestBody(new Body(description));
-	}
+class UpdateAttachment(id: String, description: String) :
+  MastodonAPIRequest<Attachment>(
+    method = HttpMethod.PUT,
+    path = "/media/$id",
+    respClass = Attachment::class.java
+  ) {
+  init {
+    setRequestBody(Body(description))
+  }
 
-	private static class Body{
-		public String description;
-
-		public Body(String description){
-			this.description=description;
-		}
-	}
+  private data class Body(val description: String)
 }
