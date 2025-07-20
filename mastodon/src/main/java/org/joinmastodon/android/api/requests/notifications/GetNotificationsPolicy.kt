@@ -1,10 +1,11 @@
-package org.joinmastodon.android.api.requests.notifications;
+package org.joinmastodon.android.api.requests.notifications
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.NotificationsPolicy;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.NotificationsPolicy
 
-public class GetNotificationsPolicy extends MastodonAPIRequest<NotificationsPolicy>{
-	public GetNotificationsPolicy(){
-		super(HttpMethod.GET, "/notifications/policy", NotificationsPolicy.class);
-	}
-}
+class GetNotificationsPolicy :
+    MastodonAPIRequest<NotificationsPolicy>(
+        method = HttpMethod.GET,
+        path = "/notifications/policy",
+        respClass = NotificationsPolicy::class.java
+    )
