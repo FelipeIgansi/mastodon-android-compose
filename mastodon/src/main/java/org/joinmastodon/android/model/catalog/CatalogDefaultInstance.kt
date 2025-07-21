@@ -1,10 +1,10 @@
-package org.joinmastodon.android.model.catalog;
+package org.joinmastodon.android.model.catalog
 
-import org.joinmastodon.android.api.AllFieldsAreRequired;
-import org.joinmastodon.android.model.BaseModel;
+import org.joinmastodon.android.api.AllFieldsAreRequired
+import org.joinmastodon.android.model.BaseModel
 
 @AllFieldsAreRequired
-public class CatalogDefaultInstance extends BaseModel{
-	public String domain;
-	public float weight;
+class CatalogDefaultInstance : BaseModel() {
+  @JvmField var domain: String? = null
+  @JvmField var weight: Float = 0f
 }
