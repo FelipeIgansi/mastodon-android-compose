@@ -1,57 +1,86 @@
-package org.joinmastodon.android.api.requests;
+package org.joinmastodon.android.api.requests
 
-import android.net.Uri;
-import android.text.TextUtils;
+import androidx.core.net.toUri
+import com.google.gson.reflect.TypeToken
+import okhttp3.Response
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.HeaderPaginationList
+import java.io.IOException
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
-import com.google.gson.reflect.TypeToken;
+/**
+ * Abstract base class for Mastodon API requests that support header-based pagination.
+ *
+ * This class extends [MastodonAPIRequest] to handle HTTP Link headers that contain
+ * pagination information. It automatically parses the Link header from API responses
+ * and populates the next/previous page URIs in the response object.
+ *
+ * @param I The type of items contained in the paginated list
+ *
+ * @see MastodonAPIRequest
+ * @see HeaderPaginationList
+ */
+abstract class HeaderPaginationRequest<I> :
+  MastodonAPIRequest<HeaderPaginationList<I>> {
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.HeaderPaginationList;
+  constructor(
+    method: HttpMethod,
+    path: String,
+    respClass: Class<HeaderPaginationList<I>>
+  ) : super(method, path, respClass)
 
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+  constructor(
+    method: HttpMethod,
+    path: String,
+    respTypeToken: TypeToken<HeaderPaginationList<I>>
+  ) : super(method, path, respTypeToken)
 
-import okhttp3.Response;
+  @Throws(IOException::class)
+  override fun validateAndPostprocessResponse(
+    respObj: HeaderPaginationList<I>,
+    httpResponse: Response
+  ) {
+    super.validateAndPostprocessResponse(respObj, httpResponse)
 
-public abstract class HeaderPaginationRequest<I> extends MastodonAPIRequest<HeaderPaginationList<I>>{
-	private static final Pattern LINK_HEADER_PATTERN=Pattern.compile("(?:(?:,\\s*)?<([^>]+)>|;\\s*(\\w+)=['\"](\\w+)['\"])");
+    val link = httpResponse.header("Link") ?: return
 
-	public HeaderPaginationRequest(HttpMethod method, String path, Class<HeaderPaginationList<I>> respClass){
-		super(method, path, respClass);
-	}
+    parseLinkHeader(link, respObj)
+  }
 
-	public HeaderPaginationRequest(HttpMethod method, String path, TypeToken<HeaderPaginationList<I>> respTypeToken){
-		super(method, path, respTypeToken);
-	}
+  private fun parseLinkHeader(
+    link: String,
+    respObj: HeaderPaginationList<I>
+  ) {
+    val matcher: Matcher = LINK_HEADER_PATTERN.matcher(link)
+    var currentUrl: String? = null
 
-	@Override
-	public void validateAndPostprocessResponse(HeaderPaginationList<I> respObj, Response httpResponse) throws IOException{
-		super.validateAndPostprocessResponse(respObj, httpResponse);
-		String link=httpResponse.header("Link");
-		if(!TextUtils.isEmpty(link)){
-			Matcher matcher=LINK_HEADER_PATTERN.matcher(link);
-			String url=null;
-			while(matcher.find()){
-				if(url==null){
-					String _url=matcher.group(1);
-					if(_url==null)
-						continue;
-					url=_url;
-				}else{
-					String paramName=matcher.group(2);
-					String paramValue=matcher.group(3);
-					if(paramName==null || paramValue==null)
-						return;
-					if("rel".equals(paramName)){
-						switch(paramValue){
-							case "next" -> respObj.nextPageUri=Uri.parse(url);
-							case "prev" -> respObj.prevPageUri=Uri.parse(url);
-						}
-						url=null;
-					}
-				}
-			}
-		}
-	}
+    while (matcher.find()) {
+
+      if (currentUrl == null) currentUrl = matcher.group(1) ?: continue
+
+      else {
+
+        val paramName = matcher.group(2) ?: return
+        val paramValue = matcher.group(3) ?: return
+
+        if (paramName == "rel") {
+
+          when (paramValue) {
+
+            "next" -> respObj.nextPageUri = currentUrl.toUri()
+            "prev" -> respObj.prevPageUri = currentUrl.toUri()
+
+          }
+
+          currentUrl = null
+        }
+      }
+    }
+  }
+
+  companion object {
+    private val LINK_HEADER_PATTERN: Pattern =
+      Pattern.compile("(?:(?:,\\s*)?<([^>]+)>|;\\s*(\\w+)=['\"](\\w+)['\"])")
+  }
 }
