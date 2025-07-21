@@ -1,10 +1,11 @@
-package org.joinmastodon.android.api.requests.tags;
+package org.joinmastodon.android.api.requests.tags
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Hashtag;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Hashtag
 
-public class GetTag extends MastodonAPIRequest<Hashtag>{
-	public GetTag(String tag){
-		super(HttpMethod.GET, "/tags/"+tag, Hashtag.class);
-	}
-}
+class GetTag(tag: String) :
+  MastodonAPIRequest<Hashtag>(
+    method = HttpMethod.GET,
+    path = "/tags/$tag",
+    respClass = Hashtag::class.java
+  )
