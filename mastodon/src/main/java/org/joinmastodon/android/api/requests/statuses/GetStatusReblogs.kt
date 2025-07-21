@@ -5,10 +5,12 @@ import org.joinmastodon.android.api.requests.HeaderPaginationRequest
 import org.joinmastodon.android.model.Account
 import org.joinmastodon.android.model.HeaderPaginationList
 
-class GetStatusReblogs(id: String?, maxID: String?, limit: Int) : HeaderPaginationRequest<Account?>(
-  HttpMethod.GET,
-  "/statuses/$id/reblogged_by",
-  object : TypeToken<HeaderPaginationList<Account?>?>() {}) {
+class GetStatusReblogs(id: String?, maxID: String?, limit: Int) :
+  HeaderPaginationRequest<Account>(
+    method = HttpMethod.GET,
+    path = "/statuses/$id/reblogged_by",
+    respTypeToken = object : TypeToken<HeaderPaginationList<Account>>() {}
+  ) {
   init {
     if (maxID != null) addQueryParameter("max_id", maxID)
     if (limit > 0) addQueryParameter("limit", limit.toString() + "")

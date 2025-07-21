@@ -7,9 +7,10 @@ import org.joinmastodon.android.model.Status
 
 class GetFavoritedStatuses(maxID: String?, limit: Int) :
   HeaderPaginationRequest<Status>(
-    HttpMethod.GET,
-    "/favourites",
-    object : TypeToken<HeaderPaginationList<Status>>() {}) {
+    method = HttpMethod.GET,
+    path = "/favourites",
+    respTypeToken = object : TypeToken<HeaderPaginationList<Status>>() {}
+  ) {
   init {
     if (maxID != null) addQueryParameter("max_id", maxID)
     if (limit > 0) addQueryParameter("limit", limit.toString())

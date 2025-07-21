@@ -7,9 +7,9 @@ import org.joinmastodon.android.model.HeaderPaginationList
 
 class GetAccountFollowing(id: String, maxID: String?, limit: Int) :
   HeaderPaginationRequest<Account>(
-    HttpMethod.GET,
-    "/accounts/$id/following",
-    object : TypeToken<HeaderPaginationList<Account>>() {}
+    method = HttpMethod.GET,
+    path = "/accounts/$id/following",
+    respTypeToken = object : TypeToken<HeaderPaginationList<Account>>() {}
   ) {
   init {
     if (maxID != null) addQueryParameter("max_id", maxID)

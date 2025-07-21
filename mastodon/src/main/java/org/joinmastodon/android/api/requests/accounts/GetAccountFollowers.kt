@@ -9,10 +9,10 @@ class GetAccountFollowers(
   id: String,
   maxID: String?,
   limit: Int
-) : HeaderPaginationRequest<Account?>(
-  HttpMethod.GET,
-  "/accounts/$id/followers",
-  object : TypeToken<HeaderPaginationList<Account>>() {}
+) : HeaderPaginationRequest<Account>(
+  method = HttpMethod.GET,
+  path = "/accounts/$id/followers",
+  respTypeToken = object : TypeToken<HeaderPaginationList<Account>>() {}
 ) {
 
   init {
