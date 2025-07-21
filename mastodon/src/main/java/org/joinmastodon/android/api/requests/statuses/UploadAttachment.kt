@@ -1,65 +1,58 @@
-package org.joinmastodon.android.api.requests.statuses;
+package org.joinmastodon.android.api.requests.statuses
 
-import android.database.Cursor;
-import android.net.Uri;
-import android.provider.OpenableColumns;
-import android.text.TextUtils;
+import android.net.Uri
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.Response
+import org.joinmastodon.android.api.ContentUriRequestBody
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.api.ProgressListener
+import org.joinmastodon.android.api.ResizedImageRequestBody
+import org.joinmastodon.android.model.Attachment
+import org.joinmastodon.android.ui.utils.UiUtils
+import java.io.IOException
 
-import org.joinmastodon.android.MastodonApp;
-import org.joinmastodon.android.api.ContentUriRequestBody;
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.api.ProgressListener;
-import org.joinmastodon.android.api.ResizedImageRequestBody;
-import org.joinmastodon.android.model.Attachment;
-import org.joinmastodon.android.ui.utils.UiUtils;
+class UploadAttachment(private val uri: Uri) :
+  MastodonAPIRequest<Attachment>(
+    method = HttpMethod.POST,
+    path = "/media",
+    respClass = Attachment::class.java
+  ) {
+  private var progressListener: ProgressListener? = null
+  private var maxImageSize = 0
+  private var description: String? = null
 
-import java.io.IOException;
+  constructor(uri: Uri, maxImageSize: Int, description: String?) : this(uri) {
+    this.maxImageSize = maxImageSize
+    this.description = description
+  }
 
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+  fun setProgressListener(progressListener: ProgressListener?): UploadAttachment {
+    this.progressListener = progressListener
+    return this
+  }
 
-public class UploadAttachment extends MastodonAPIRequest<Attachment>{
-	private Uri uri;
-	private ProgressListener progressListener;
-	private int maxImageSize;
-	private String description;
+  override fun getPathPrefix() = "/api/v2"
 
-	public UploadAttachment(Uri uri){
-		super(HttpMethod.POST, "/media", Attachment.class);
-		this.uri=uri;
-	}
 
-	public UploadAttachment(Uri uri, int maxImageSize, String description){
-		this(uri);
-		this.maxImageSize=maxImageSize;
-		this.description=description;
-	}
+  @Throws(IOException::class)
+  override fun validateAndPostprocessResponse(respObj: Attachment, httpResponse: Response) {
+    if (respObj.url == null) respObj.url = ""
+    super.validateAndPostprocessResponse(respObj, httpResponse)
+  }
 
-	public UploadAttachment setProgressListener(ProgressListener progressListener){
-		this.progressListener=progressListener;
-		return this;
-	}
-
-	@Override
-	protected String getPathPrefix(){
-		return "/api/v2";
-	}
-
-	@Override
-	public void validateAndPostprocessResponse(Attachment respObj, Response httpResponse) throws IOException{
-		if(respObj.url==null)
-			respObj.url="";
-		super.validateAndPostprocessResponse(respObj, httpResponse);
-	}
-
-	@Override
-	public RequestBody getRequestBody() throws IOException{
-		MultipartBody.Builder builder=new MultipartBody.Builder()
-				.setType(MultipartBody.FORM)
-				.addFormDataPart("file", UiUtils.getFileName(uri), maxImageSize>0 ? new ResizedImageRequestBody(uri, maxImageSize, progressListener) : new ContentUriRequestBody(uri, progressListener));
-		if(!TextUtils.isEmpty(description))
-			builder.addFormDataPart("description", description);
-		return builder.build();
-	}
+  @Throws(IOException::class)
+  override fun getRequestBody(): RequestBody {
+    val builder = MultipartBody.Builder()
+      .setType(MultipartBody.FORM)
+      .addFormDataPart(
+        name = "file",
+        filename = UiUtils.getFileName(uri),
+        body = if (maxImageSize > 0) {
+          ResizedImageRequestBody(uri, maxImageSize, progressListener)
+        } else ContentUriRequestBody(uri, progressListener)
+      )
+    if (!description.isNullOrEmpty()) builder.addFormDataPart("description", description ?: "")
+    return builder.build()
+  }
 }
