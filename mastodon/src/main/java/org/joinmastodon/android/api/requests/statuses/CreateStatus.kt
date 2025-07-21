@@ -1,49 +1,47 @@
-package org.joinmastodon.android.api.requests.statuses;
+package org.joinmastodon.android.api.requests.statuses
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Status;
-import org.joinmastodon.android.model.StatusPrivacy;
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Status
+import org.joinmastodon.android.model.StatusPrivacy
+import java.time.Instant
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+class CreateStatus(req: Request, uuid: String) :
+  MastodonAPIRequest<Status>(
+    method = HttpMethod.POST,
+    path = "/statuses",
+    respClass = Status::class.java
+  ) {
+  init {
+    setRequestBody(req)
+    addHeader("Idempotency-Key", uuid)
+  }
 
-public class CreateStatus extends MastodonAPIRequest<Status>{
-	public CreateStatus(CreateStatus.Request req, String uuid){
-		super(HttpMethod.POST, "/statuses", Status.class);
-		setRequestBody(req);
-		addHeader("Idempotency-Key", uuid);
-	}
+  class Request {
+    @JvmField var status: String = ""
+    @JvmField var mediaAttributes: MutableList<MediaAttribute> = mutableListOf()
+    @JvmField var mediaIds: MutableList<String> = mutableListOf()
+    @JvmField var poll: Poll? = null
+    @JvmField var inReplyToId: String? = null
+    @JvmField var sensitive: Boolean = false
+    @JvmField var spoilerText: String? = null
+    @JvmField var visibility: StatusPrivacy? = null
+    @JvmField var language: String? = null
 
-	public static class Request{
-		public String status;
-		public List<MediaAttribute> mediaAttributes;
-		public List<String> mediaIds;
-		public Poll poll;
-		public String inReplyToId;
-		public boolean sensitive;
-		public String spoilerText;
-		public StatusPrivacy visibility;
-		public Instant scheduledAt;
-		public String language;
+    var scheduledAt: Instant? = null
 
-		public static class Poll{
-			public ArrayList<String> options=new ArrayList<>();
-			public int expiresIn;
-			public boolean multiple;
-			public boolean hideTotals;
-		}
 
-		public static class MediaAttribute{
-			public String id;
-			public String description;
-			public String focus;
+    class Poll {
+      @JvmField var options: ArrayList<String> = ArrayList()
+      @JvmField var expiresIn: Int = 0
+      @JvmField var multiple: Boolean = false
 
-			public MediaAttribute(String id, String description, String focus){
-				this.id=id;
-				this.description=description;
-				this.focus=focus;
-			}
-		}
-	}
+      var hideTotals: Boolean = false
+    }
+
+    class MediaAttribute(
+      var id: String?,
+      var description: String?,
+      var focus: String?
+    )
+  }
 }
