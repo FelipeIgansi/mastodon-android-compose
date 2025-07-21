@@ -1,21 +1,27 @@
-package org.joinmastodon.android.api.requests.statuses;
+package org.joinmastodon.android.api.requests.statuses
 
-import org.joinmastodon.android.api.MastodonAPIRequest;
-import org.joinmastodon.android.model.Attachment;
+import okhttp3.Response
+import org.joinmastodon.android.api.MastodonAPIRequest
+import org.joinmastodon.android.model.Attachment
+import java.io.IOException
 
-import java.io.IOException;
-
-import okhttp3.Response;
-
-public class GetAttachmentByID extends MastodonAPIRequest<Attachment>{
-	public GetAttachmentByID(String id){
-		super(HttpMethod.GET, "/media/"+id, Attachment.class);
-	}
-
-	@Override
-	public void validateAndPostprocessResponse(Attachment respObj, Response httpResponse) throws IOException{
-		if(httpResponse.code()==206)
-			respObj.url="";
-		super.validateAndPostprocessResponse(respObj, httpResponse);
-	}
+class GetAttachmentByID(id: String) :
+  MastodonAPIRequest<Attachment>(
+    method = HttpMethod.GET,
+    path = "/media/$id",
+    respClass = Attachment::class.java
+  ) {
+  @Throws(IOException::class)
+  override fun validateAndPostprocessResponse(
+    respObj: Attachment,
+    httpResponse: Response
+  ) {
+    if (httpResponse.code == 206) {
+      respObj.url = ""
+    }
+    super.validateAndPostprocessResponse(
+      respObj,
+      httpResponse
+    )
+  }
 }
