@@ -1,0 +1,81 @@
+[versions]
+annotation = "1.9.1"
+appcenterCrashes = "5.0.4"
+appkit = "1.4.4"
+asyncOtto = "1.0.3"
+browser = "1.4.0"
+core = "3.5.3"
+coreVersion = "1.5.0"
+desugar_jdk_libs = "2.1.5"
+dynamicanimation = "1.1.0-alpha03"
+gradle = "8.9.0"
+gson = "2.11.0"
+jsoup = "1.14.3"
+okhttp = "4.12.0"
+otto = "1.3.8"
+palette = "1.0.0"
+parceler = "1.1.12"
+parcelerApi = "1.1.12"
+recyclerview = "1.2.1.1"
+runner = "1.6.2"
+safeParcel = "1.5.0"
+secretsGradlePlugin = "2.0.1"
+coreKtx = "1.15.0"
+
+junitVersion = "1.2.1"
+espressoCore = "3.6.1"
+
+swiperefreshlayout = "1.1.0.1"
+viewpager = "1.0.0"
+viewpager2 = "1.0.0"
+constraintlayout = "2.2.1"
+exifinterface = "1.3.6"
+viewpagerVersion = "1.0.0"
+
+
+
+
+
+[libraries]
+androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
+androidx-core = { module = "androidx.test:core", version.ref = "coreVersion" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-runner = { module = "androidx.test:runner", version.ref = "runner" }
+androidx-viewpager = { module = "androidx.viewpager:viewpager", version.ref = "viewpagerVersion" }
+appcenter-crashes = { module = "com.microsoft.appcenter:appcenter-crashes", version.ref = "appcenterCrashes" }
+appcenter-distribute = { module = "com.microsoft.appcenter:appcenter-distribute", version.ref = "appcenterCrashes" }
+appkit = { module = "me.grishka.appkit:appkit", version.ref = "appkit" }
+async-otto = { module = "de.psdev:async-otto", version.ref = "asyncOtto" }
+browser = { module = "me.grishka.litex:browser", version.ref = "browser" }
+core = { module = "com.google.zxing:core", version.ref = "core" }
+desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
+dynamicanimation = { module = "me.grishka.litex:dynamicanimation", version.ref = "dynamicanimation" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+
+
+
+gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+otto = { module = "com.squareup:otto", version.ref = "otto" }
+palette = { module = "me.grishka.litex:palette", version.ref = "palette" }
+parceler = { module = "org.parceler:parceler", version.ref = "parceler" }
+parceler-api = { module = "org.parceler:parceler-api", version.ref = "parcelerApi" }
+recyclerview = { module = "me.grishka.litex:recyclerview", version.ref = "recyclerview" }
+safe-parcel = { module = "org.microg:safe-parcel", version.ref = "safeParcel" }
+secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }
+swiperefreshlayout = { module = "me.grishka.litex:swiperefreshlayout", version.ref = "swiperefreshlayout" }
+viewpager = { module = "me.grishka.litex:viewpager", version.ref = "viewpager" }
+viewpager2 = { module = "me.grishka.litex:viewpager2", version.ref = "viewpager2" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
+
+
+
+
+
+[plugins]
+
+

@@ -9,7 +9,7 @@ android {
 		generateLocaleConfig = true
 	}
 
-	compileSdk 34
+	compileSdk 35
 	defaultConfig {
 		applicationId "org.joinmastodon.android"
 		minSdk 23
@@ -84,45 +84,53 @@ android {
 	}
 }
 //I had to add a condition to ignore a dependency, as there was a duplication conflict with the ktx core dependency
-configurations.all {
+/*Me ocorreu, que talvez essa biblioteca externa do grishka (carinha, responsavel pelo desenvolvimento do Mastodon Android),
+* tenha sido criada justamente para manter verões antigas das duplicatas.
+* TODO(Verificar isso no futuro) */
+configurations.configureEach {
 	exclude group: 'me.grishka.litex', module: 'collection'
 	exclude group: 'me.grishka.litex', module: 'concurrent'
+	exclude group: 'me.grishka.litex', module: 'viewpager'
 	resolutionStrategy {
 		force 'androidx.collection:collection:1.1.0'
 		force 'androidx.concurrent:concurrent-futures:1.1.0'
+		force 'androidx.viewpager:viewpager:1.0.0'
 	}
 }
 
 dependencies {
-	api 'androidx.annotation:annotation:1.3.0'
-	implementation 'com.squareup.okhttp3:okhttp:3.14.9'
-	implementation 'me.grishka.litex:recyclerview:1.2.1.1'
-	implementation 'me.grishka.litex:swiperefreshlayout:1.1.0.1'
-	implementation 'me.grishka.litex:browser:1.4.0'
-	implementation 'me.grishka.litex:dynamicanimation:1.1.0-alpha03'
-	implementation 'me.grishka.litex:viewpager:1.0.0'
-	implementation 'me.grishka.litex:viewpager2:1.0.0'
-	implementation 'me.grishka.litex:palette:1.0.0'
-	implementation 'me.grishka.appkit:appkit:1.4.4'
-	implementation 'com.google.code.gson:gson:2.8.9'
-	implementation 'org.jsoup:jsoup:1.14.3'
-	implementation 'com.squareup:otto:1.3.8'
-	implementation 'de.psdev:async-otto:1.0.3'
-	implementation 'com.google.zxing:core:3.5.3'
-	implementation 'org.microg:safe-parcel:1.5.0'
-	implementation 'org.parceler:parceler-api:1.1.12'
-	implementation 'androidx.core:core-ktx:1.13.0'
-	annotationProcessor 'org.parceler:parceler:1.1.12'
-	coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
+	implementation libs.androidx.viewpager
 
-	def appCenterSdkVersion = "5.0.4"
-	appcenterPrivateBetaImplementation "com.microsoft.appcenter:appcenter-crashes:${appCenterSdkVersion}"
-	appcenterPrivateBetaImplementation "com.microsoft.appcenter:appcenter-distribute:${appCenterSdkVersion}"
-	appcenterPublicBetaImplementation "com.microsoft.appcenter:appcenter-crashes:${appCenterSdkVersion}"
-	appcenterPublicBetaImplementation "com.microsoft.appcenter:appcenter-distribute:${appCenterSdkVersion}"
+	api libs.androidx.annotation
+	implementation libs.okhttp
+	implementation libs.recyclerview
+	implementation libs.swiperefreshlayout
+	implementation libs.browser
+	implementation libs.dynamicanimation
+	implementation libs.viewpager
+	implementation libs.viewpager2
+	implementation libs.palette
+	implementation libs.appkit
+	implementation libs.gson
+	implementation libs.jsoup
+	implementation libs.otto
+	implementation libs.async.otto
+	implementation libs.core
+	implementation libs.safe.parcel
+	implementation libs.parceler.api
+	implementation libs.androidx.core.ktx
+    implementation libs.androidx.constraintlayout
+    implementation libs.androidx.exifinterface
+    annotationProcessor libs.parceler
+	coreLibraryDesugaring libs.desugar.jdk.libs
 
-	androidTestImplementation 'androidx.test:core:1.5.0'
-	androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-	androidTestImplementation 'androidx.test:runner:1.5.2'
-	androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+	appcenterPrivateBetaImplementation libs.appcenter.crashes
+	appcenterPrivateBetaImplementation libs.appcenter.distribute
+	appcenterPublicBetaImplementation libs.appcenter.crashes
+	appcenterPublicBetaImplementation libs.appcenter.distribute
+
+	androidTestImplementation libs.androidx.core
+	androidTestImplementation libs.androidx.junit
+	androidTestImplementation libs.androidx.runner
+	androidTestImplementation libs.androidx.espresso.core
 }
