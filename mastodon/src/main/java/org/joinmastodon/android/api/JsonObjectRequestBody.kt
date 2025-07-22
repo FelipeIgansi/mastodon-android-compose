@@ -3,6 +3,7 @@ package org.joinmastodon.android.api
 import com.google.gson.JsonElement
 import com.google.gson.JsonIOException
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
 import okio.BufferedSink
 import java.io.IOException
@@ -11,7 +12,7 @@ import java.nio.charset.StandardCharsets
 
 class JsonObjectRequestBody(private val obj: Any) : RequestBody() {
     override fun contentType(): MediaType? {
-        return MediaType.get("application/json")
+        return "application/json".toMediaType()
     }
 
     @Throws(IOException::class)

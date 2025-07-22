@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.annotations.SerializedName;
@@ -111,9 +112,10 @@ public class AccountSession{
 
 	AccountSession(ContentValues values){
 		domain=values.getAsString("domain");
-		self=MastodonAPIController.gson.fromJson(values.getAsString("account_obj"), Account.class);
-		token=MastodonAPIController.gson.fromJson(values.getAsString("token"), Token.class);
-		app=MastodonAPIController.gson.fromJson(values.getAsString("application"), Application.class);
+		Gson gson = MastodonAPIController.gson;
+		self=gson.fromJson(values.getAsString("account_obj"), Account.class);
+		token=gson.fromJson(values.getAsString("token"), Token.class);
+		app=gson.fromJson(values.getAsString("application"), Application.class);
 		infoLastUpdated=values.getAsLong("info_last_updated");
 		long flags=values.getAsLong("flags");
 		activated=(flags & FLAG_ACTIVATED)==FLAG_ACTIVATED;
@@ -124,13 +126,13 @@ public class AccountSession{
 			pushPrivateKey=pushKeys.get("private").getAsString();
 			pushPublicKey=pushKeys.get("public").getAsString();
 		}
-		pushSubscription=MastodonAPIController.gson.fromJson(values.getAsString("push_subscription"), PushSubscription.class);
+		pushSubscription=gson.fromJson(values.getAsString("push_subscription"), PushSubscription.class);
 		JsonObject legacyFilters=JsonParser.parseString(values.getAsString("legacy_filters")).getAsJsonObject();
-		wordFilters=MastodonAPIController.gson.fromJson(legacyFilters.getAsJsonArray("filters"), new TypeToken<List<LegacyFilter>>(){}.getType());
+		wordFilters=gson.fromJson(legacyFilters.getAsJsonArray("filters"), new TypeToken<List<LegacyFilter>>(){}.getType());
 		filtersLastUpdated=legacyFilters.get("updated").getAsLong();
 		pushAccountID=values.getAsString("push_id");
-		activationInfo=MastodonAPIController.gson.fromJson(values.getAsString("activation_info"), AccountActivationInfo.class);
-		preferences=MastodonAPIController.gson.fromJson(values.getAsString("preferences"), Preferences.class);
+		activationInfo=gson.fromJson(values.getAsString("activation_info"), AccountActivationInfo.class);
+		preferences=gson.fromJson(values.getAsString("preferences"), Preferences.class);
 	}
 
 	public void toContentValues(ContentValues values){
