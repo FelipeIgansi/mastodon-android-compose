@@ -177,7 +177,7 @@ class PushSubscriptionManager(private val accountID: String) {
           }
 
           session.needUpdatePushSettings -> {
-            session.pushSubscriptionManager.updatePushSettings(session.pushSubscription)
+            session.pushSubscriptionManager.updatePushSettings(session.pushSubscription ?: PushSubscription())
           }
         }
       }
@@ -561,7 +561,7 @@ class PushSubscriptionManager(private val accountID: String) {
       } else {
         Log.e(TAG, "FCM registration intent did not contain registration_id: $intent")
         intent.extras?.keySet()?.forEach { key ->
-          Log.i(TAG, "$key -> ${intent.extras?.get(key)}")
+          Log.i(TAG, "$key -> ${intent.extras?.getString(key)}")
         }
       }
     }

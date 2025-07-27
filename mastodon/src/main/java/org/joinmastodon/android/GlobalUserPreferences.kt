@@ -3,9 +3,9 @@ package org.joinmastodon.android
 import android.content.Context
 import android.content.SharedPreferences
 import org.joinmastodon.android.api.session.AccountSessionManager
-import org.joinmastodon.android.model.Account
 import java.util.Locale
 import androidx.core.content.edit
+import org.joinmastodon.android.model.Account
 
 object GlobalUserPreferences {
   @JvmField var playGifs: Boolean = false
@@ -85,8 +85,8 @@ object GlobalUserPreferences {
   ): Boolean {
     if (preReplyPrefs.getBoolean("opt_out_$type", false)) return true
     if (account == null) return false
-    var accountKey = account.acct
-    if (!accountKey.contains("@")) accountKey += "@" + AccountSessionManager.get(accountID).domain
+    var accountKey = account.acct ?: ""
+    if (!accountKey.contains("@")) accountKey += "@${AccountSessionManager.get(accountID).domain}"
     return preReplyPrefs.getBoolean(
       "opt_out_${type}_${accountKey.lowercase(Locale.getDefault())}",
       false
@@ -99,9 +99,9 @@ object GlobalUserPreferences {
     if (account == null) {
       key = "opt_out_$type"
     } else {
-      var accountKey = account.acct
-      if (!accountKey.contains("@")) accountKey += "@" + AccountSessionManager.get(accountID).domain
-      key = "opt_out_" + type + "_" + accountKey.lowercase(Locale.getDefault())
+      var accountKey = account.acct ?: ""
+      if (!accountKey.contains("@")) accountKey += "@${AccountSessionManager.get(accountID).domain}"
+      key = "opt_out_${type}_${accountKey.lowercase(Locale.getDefault())}"
     }
     preReplyPrefs.edit { putBoolean(key, true) }
   }

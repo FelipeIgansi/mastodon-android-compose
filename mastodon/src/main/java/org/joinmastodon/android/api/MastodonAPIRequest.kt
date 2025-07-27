@@ -93,7 +93,7 @@ abstract class MastodonAPIRequest<T> : APIRequest<T> {
     try {
       account = AccountSessionManager.getInstance().getAccount(accountID)
       domain = account?.domain
-      account?.getApiController()?.submitRequest(this)
+      account?.apiController?.submitRequest(this)
     } catch (x: Exception) {
       Log.e(TAG, "exec: this shouldn't happen, but it still did", x)
       invokeErrorCallback(MastodonErrorResponse(x.localizedMessage ?: "", -1, x))

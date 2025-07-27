@@ -61,7 +61,7 @@ class MastodonAPIController(private val session: AccountSession?) {
     @JvmStatic
     fun getHttpClient(): OkHttpClient = this.httpClient
 
-    private fun logTag(session: AccountSession?) = "[${session?.id ?: "no-auth"}] "
+    private fun logTag(session: AccountSession?) = "[${session?.getID() ?: "no-auth"}] "
 
   }
 
@@ -83,7 +83,7 @@ class MastodonAPIController(private val session: AccountSession?) {
           )
 
         val token = when {
-          session != null -> session.token.accessToken
+          session != null -> session.token?.accessToken
           req.token != null -> req.token?.accessToken
           else -> null
         }
