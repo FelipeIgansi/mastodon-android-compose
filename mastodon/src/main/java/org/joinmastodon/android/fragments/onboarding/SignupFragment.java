@@ -243,9 +243,9 @@ public class SignupFragment extends ToolbarFragment{
 						fakeAccount.acct=username;
 						fakeAccount.url="https://"+instance.getDomain()+"/@"+username;
 						fakeAccount.avatar=fakeAccount.avatarStatic=fakeAccount.headerStatic=fakeAccount.header=fakeAccount.note="";
-						AccountSessionManager.getInstance().addAccount(instance, result, fakeAccount, apiApplication, new AccountActivationInfo(email, System.currentTimeMillis()));
+						AccountSessionManager.instance.addAccount(instance, result, fakeAccount, apiApplication, new AccountActivationInfo(email, System.currentTimeMillis()));
 						Bundle args=new Bundle();
-						args.putString("account", AccountSessionManager.getInstance().getLastActiveAccountID());
+						args.putString("account", AccountSessionManager.instance.getLastActiveAccountID());
 						Nav.goClearingStack(getActivity(), AccountActivationFragment.class, args);
 					}
 

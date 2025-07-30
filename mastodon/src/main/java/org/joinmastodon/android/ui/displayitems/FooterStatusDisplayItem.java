@@ -131,7 +131,7 @@ public class FooterStatusDisplayItem extends StatusDisplayItem{
 			bindButton(favorite, item.status.favouritesCount);
 			boostBtn.setSelected(item.status.reblogged);
 			favoriteBtn.setSelected(item.status.favourited);
-			boolean isOwn=item.status.account.id.equals(AccountSessionManager.getInstance().getAccount(item.accountID).self.id);
+			boolean isOwn=item.status.account.id.equals(AccountSessionManager.instance.getAccount(item.accountID).self.id);
 			boostBtn.setEnabled(item.status.visibility==StatusPrivacy.PUBLIC || item.status.visibility==StatusPrivacy.UNLISTED
 					|| (item.status.visibility==StatusPrivacy.PRIVATE && isOwn));
 			Drawable d=itemView.getResources().getDrawable(switch(item.status.visibility){
@@ -177,13 +177,13 @@ public class FooterStatusDisplayItem extends StatusDisplayItem{
 		}
 
 		private void doBoost(){
-			AccountSessionManager.getInstance().getAccount(item.accountID).getStatusInteractionController().setReblogged(item.status, !item.status.reblogged);
+			AccountSessionManager.instance.getAccount(item.accountID).getStatusInteractionController().setReblogged(item.status, !item.status.reblogged);
 			boost.setSelected(item.status.reblogged);
 			bindButton(boost, item.status.reblogsCount);
 		}
 
 		private void onFavoriteClick(View v){
-			AccountSessionManager.getInstance().getAccount(item.accountID).getStatusInteractionController().setFavorited(item.status, !item.status.favourited);
+			AccountSessionManager.instance.getAccount(item.accountID).getStatusInteractionController().setFavorited(item.status, !item.status.favourited);
 			favorite.setSelected(item.status.favourited);
 			bindButton(favorite, item.status.favouritesCount);
 		}
@@ -215,7 +215,7 @@ public class FooterStatusDisplayItem extends StatusDisplayItem{
 			}else if(id==R.id.boost){
 				onBoostClick(null);
 			}else if(id==R.id.bookmark){
-				AccountSessionManager.getInstance().getAccount(this.item.accountID).getStatusInteractionController().setBookmarked(this.item.status, !this.item.status.bookmarked);
+				AccountSessionManager.instance.getAccount(this.item.accountID).getStatusInteractionController().setBookmarked(this.item.status, !this.item.status.bookmarked);
 			}else if(id==R.id.view_favorites){
 				startAccountListFragment(StatusFavoritesListFragment.class);
 			}else if(id==R.id.view_boosts){

@@ -141,23 +141,21 @@ class AccountSession {
 
   fun getRawLocalPreferences(): SharedPreferences {
     if (prefs == null) {
-      val currentContext = MastodonApp.context
-        ?: throw IllegalStateException("AccountSession File: Application context is null")
+      val currentContext = checkNotNull(MastodonApp.context) { "AccountSession File: Application context is null" }
       val newPrefs = currentContext.getSharedPreferences(getID(), Context.MODE_PRIVATE)
       prefs = newPrefs
     }
     return prefs!!
   }
 
-  fun getID() = self?.let { "${domain}_${it.id}" } ?: throw IllegalStateException("AccountSession File: LocalID is null")
+  fun getID() = self?.let { "${domain}_${it.id}" }
+    ?: throw IllegalStateException("AccountSession File: LocalID is null")
 
   val fullUsername: String
     get() = self?.let { "@${it.username}@$domain" }
       ?: throw IllegalStateException("AccountSession File: FullUserName is null")
 
-  fun getLastKnownNotificationsMarker(): String? {
-    return getRawLocalPreferences().getString("notificationsMarker", null)
-  }
+  fun getLastKnownNotificationsMarker() = getRawLocalPreferences().getString("notificationsMarker", null)
 
 
   var isNotificationsMentionsOnly: Boolean
@@ -187,7 +185,7 @@ class AccountSession {
     get() = abs(this.fullUsername.hashCode()) % 100
 
   val instanceInfo: Instance?
-    get() = AccountSessionManager.getInstance().getInstanceInfo(domain)
+    get() = domain?.let { AccountSessionManager.instance.getInstanceInfo(it) }
 
   fun getFlagsForDatabase(): Long {
     var flags: Long = 0
@@ -229,8 +227,7 @@ class AccountSession {
 
     val flags = values.getAsLong("flags") ?: 0L
     activated = (flags and FLAG_ACTIVATED.toLong()) == FLAG_ACTIVATED.toLong()
-    needUpdatePushSettings =
-      (flags and FLAG_NEED_UPDATE_PUSH_SETTINGS.toLong()) == FLAG_NEED_UPDATE_PUSH_SETTINGS.toLong()
+    needUpdatePushSettings = (flags and FLAG_NEED_UPDATE_PUSH_SETTINGS.toLong()) == FLAG_NEED_UPDATE_PUSH_SETTINGS.toLong()
 
     val pushKeys = JsonParser.parseString(values.getAsString("push_keys")).getAsJsonObject()
     if (!pushKeys.get("auth").isJsonNull && !pushKeys.get("private")
@@ -264,16 +261,17 @@ class AccountSession {
 
   fun toContentValues(values: ContentValues) {
     values.put("id", getID())
-    values.put(
-      "domain",
-      domain?.lowercase()
-        ?: throw IllegalStateException("AccountSession File: Domain cannot be null for ContentValues")
-    )
-    values.put("account_obj", MastodonAPIController.gson.toJson(self))
-    values.put("token", MastodonAPIController.gson.toJson(token))
-    values.put("application", MastodonAPIController.gson.toJson(app))
-    values.put("info_last_updated", infoLastUpdated)
-    values.put("flags", this.getFlagsForDatabase())
+    values.put("domain", domain?.lowercase() ?: "mastodon.social")
+
+    val gson = MastodonAPIController.gson
+    values.apply {
+      put("account_obj", gson.toJson(self))
+      put("token", gson.toJson(token))
+      put("application", gson.toJson(app))
+      put("info_last_updated", infoLastUpdated)
+      put("flags", getFlagsForDatabase())
+    }
+
 
     if (pushAuthKey != null && pushPrivateKey != null && pushPublicKey != null) {
       values.put(
@@ -286,30 +284,32 @@ class AccountSession {
       )
     }
 
-    values.put("push_subscription", MastodonAPIController.gson.toJson(pushSubscription))
-    values.put(
-      "legacy_filters", JsonObjectBuilder()
-        .add("filters", MastodonAPIController.gson.toJsonTree(wordFilters))
-        .add("updated", filtersLastUpdated)
-        .build()
-        .toString()
-    )
-    values.put("push_id", pushAccountID)
-    values.put("activation_info", MastodonAPIController.gson.toJson(activationInfo))
-    values.put("preferences", MastodonAPIController.gson.toJson(preferences))
+    values.apply {
+      put("push_subscription", gson.toJson(pushSubscription))
+      put(
+        "legacy_filters", JsonObjectBuilder()
+          .add("filters", gson.toJsonTree(wordFilters))
+          .add("updated", filtersLastUpdated)
+          .build()
+          .toString()
+      )
+      put("push_id", pushAccountID)
+      put("activation_info", gson.toJson(activationInfo))
+      put("preferences", gson.toJson(preferences))
+    }
   }
 
 
-  fun reloadPreferences(callback: Consumer<Preferences>?) {
+  fun reloadPreferences(callback: Consumer<Preferences>) {
     GetPreferences()
       .setCallback(object : Callback<Preferences> {
         override fun onSuccess(result: Preferences) {
           preferences = result
-          callback?.accept(result)
-          AccountSessionManager.getInstance().updateAccountPreferences(getID(), result)
+          callback.accept(result)
+          AccountSessionManager.instance.updateAccountPreferences(getID(), result)
         }
 
-        override fun onError(error: ErrorResponse?) {
+        override fun onError(error: ErrorResponse) {
           Log.w(TAG, "Failed to load preferences for account ${getID()}: $error")
         }
       })
@@ -317,7 +317,7 @@ class AccountSession {
   }
 
 
-  fun reloadNotificationsMarker(callback: Consumer<String?>) {
+  fun reloadNotificationsMarker(callback: Consumer<String>) {
     GetMarkers()
       .setCallback(object : Callback<TimelineMarkers> {
         override fun onSuccess(result: TimelineMarkers) {
@@ -343,7 +343,7 @@ class AccountSession {
   }
 
 
-  fun setNotificationsMarker(id: String?, clearUnread: Boolean) {
+  fun setNotificationsMarker(id: String, clearUnread: Boolean) {
     getRawLocalPreferences().edit { putString("notificationsMarker", id) }
     post(NotificationsMarkerUpdatedEvent(getID(), id, clearUnread))
   }
@@ -351,7 +351,7 @@ class AccountSession {
   fun logOut(activity: Activity, onDone: Runnable) {
 
     val cleanup = {
-      AccountSessionManager.getInstance().removeAccount(getID())
+      AccountSessionManager.instance.removeAccount(getID())
       onDone.run()
     }
 
@@ -378,18 +378,20 @@ class AccountSession {
   }
 
   fun savePreferencesIfPending() {
+    val currentAccount = self ?: return
+
     if (preferencesNeedSaving) {
       preferences?.let { pref ->
         UpdateAccountCredentialsPreferences(
           pref,
           null,
-          self?.discoverable,
-          self?.source?.indexable
+          currentAccount.discoverable,
+          currentAccount.source?.indexable
         ).setCallback(object : Callback<Account> {
           override fun onSuccess(result: Account) {
             preferencesNeedSaving = false
             self = result
-            AccountSessionManager.getInstance().updateAccountInfo(getID(), self)
+            AccountSessionManager.instance.updateAccountInfo(getID(), currentAccount)
           }
 
           override fun onError(error: ErrorResponse?) {
@@ -400,22 +402,21 @@ class AccountSession {
     }
   }
 
-  fun filterStatuses(statuses: MutableList<Status?>, context: FilterContext?) {
-    filterStatusContainingObjects<Status?>(statuses, Function.identity<Status?>(), context)
+  fun filterStatuses(statuses: MutableList<Status>, context: FilterContext) {
+    filterStatusContainingObjects<Status>(statuses, Function.identity<Status>(), context)
   }
 
   fun <T> filterStatusContainingObjects(
-    objects: MutableList<T?>,
-    extractor: Function<T?, Status?>,
-    context: FilterContext?
+    objects: MutableList<T>,
+    extractor: Function<T, Status>,
+    context: FilterContext
   ) {
     if (this.localPreferences.serverSideFiltersSupported) {
       // Even with server-side filters, clients are expected to remove statuses that match a filter that hides them
-      objects.removeIf { o: T? ->
-        val s = extractor.apply(o)
-        if (s == null) return@removeIf false
-        if (s.filtered == null) return@removeIf false
-        for (filter in s.filtered) {
+      objects.removeIf { obj: T ->
+        val status = extractor.apply(obj)
+        if (status.filtered == null) return@removeIf false
+        for (filter in status.filtered) {
           if (filter.filter.isActive && filter.filter.filterAction == FilterAction.HIDE) return@removeIf true
         }
         false
@@ -423,25 +424,24 @@ class AccountSession {
       return
     }
     for (obj in objects) {
-      val s = extractor.apply(obj)
-      if (s != null && s.filtered != null) {
+      val status = extractor.apply(obj)
+      if (status.filtered != null) {
         this.localPreferences.serverSideFiltersSupported = true
         this.localPreferences.save()
         return
       }
     }
-    objects.removeIf { o: T? ->
-      val s = extractor.apply(o)
-      if (s == null) return@removeIf false
+    objects.removeIf { obj: T ->
+      val status = extractor.apply(obj)
       for (filter in wordFilters) {
-        if (filter.context.contains(context) && filter.matches(s) && filter.isActive) return@removeIf true
+        if (filter.context.contains(context) && filter.matches(status) && filter.isActive) return@removeIf true
       }
       false
     }
   }
 
   fun updateAccountInfo() {
-    AccountSessionManager.getInstance().updateSessionLocalInfo(this)
+    AccountSessionManager.instance.updateSessionLocalInfo(this)
   }
 
 }

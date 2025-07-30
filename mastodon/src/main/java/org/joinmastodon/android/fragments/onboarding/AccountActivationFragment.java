@@ -55,7 +55,7 @@ public class AccountActivationFragment extends ToolbarFragment{
 		super.onCreate(savedInstanceState);
 		accountID=getArguments().getString("account");
 		setTitle(R.string.confirm_email_title);
-		AccountSession session=AccountSessionManager.getInstance().getAccount(accountID);
+		AccountSession session= AccountSessionManager.instance.getAccount(accountID);
 		lastResendTime=session.activationInfo!=null ? session.activationInfo.lastEmailConfirmationResend : 0;
 	}
 
@@ -75,7 +75,7 @@ public class AccountActivationFragment extends ToolbarFragment{
 		resendBtn=view.findViewById(R.id.btn_resend);
 		resendBtn.setOnClickListener(this::onResendClick);
 		TextView text=view.findViewById(R.id.subtitle);
-		AccountSession session=AccountSessionManager.getInstance().getAccount(accountID);
+		AccountSession session= AccountSessionManager.instance.getAccount(accountID);
 		text.setText(getString(R.string.confirm_email_subtitle, session.activationInfo!=null ? session.activationInfo.email : "?"));
 		updateResendTimer();
 
@@ -143,14 +143,14 @@ public class AccountActivationFragment extends ToolbarFragment{
 					@Override
 					public void onSuccess(Object result){
 						Toast.makeText(getActivity(), R.string.resent_email, Toast.LENGTH_SHORT).show();
-						AccountSession session=AccountSessionManager.getInstance().getAccount(accountID);
+						AccountSession session= AccountSessionManager.instance.getAccount(accountID);
 						if(session.activationInfo==null){
 							session.activationInfo=new AccountActivationInfo("?", System.currentTimeMillis());
 						}else{
 							session.activationInfo.lastEmailConfirmationResend=System.currentTimeMillis();
 						}
 						lastResendTime=session.activationInfo.lastEmailConfirmationResend;
-						AccountSessionManager.getInstance().writeAccountActivationInfo(accountID);
+						AccountSessionManager.instance.writeAccountActivationInfo(accountID);
 						updateResendTimer();
 					}
 
@@ -164,7 +164,7 @@ public class AccountActivationFragment extends ToolbarFragment{
 	}
 
 	private void tryGetAccount(){
-		if(AccountSessionManager.getInstance().tryGetAccount(accountID)==null){
+		if(AccountSessionManager.instance.tryGetAccount(accountID)==null){
 			uiHandler.removeCallbacks(pollRunnable);
 			((MainActivity)getActivity()).restartHomeFragment();
 			return;
@@ -174,7 +174,7 @@ public class AccountActivationFragment extends ToolbarFragment{
 					@Override
 					public void onSuccess(Account result){
 						currentRequest=null;
-						AccountSessionManager mgr=AccountSessionManager.getInstance();
+						AccountSessionManager mgr= AccountSessionManager.instance;
 						AccountSession session=mgr.getAccount(accountID);
 						Instance instance=mgr.getInstanceInfo(session.domain);
 						mgr.removeAccount(accountID);

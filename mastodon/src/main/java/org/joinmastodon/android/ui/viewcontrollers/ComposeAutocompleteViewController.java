@@ -197,8 +197,8 @@ public class ComposeAutocompleteViewController{
 		}else if(mode==Mode.EMOJIS){
 			String _text=text.substring(1); // remove ':'
 			List<WrappedEmoji> oldList=emojis;
-			List<Emoji> allEmojis = AccountSessionManager.getInstance()
-					.getCustomEmojis(AccountSessionManager.getInstance().getAccount(accountID).domain)
+			List<Emoji> allEmojis = AccountSessionManager.instance
+					.getCustomEmojis(AccountSessionManager.instance.getAccount(accountID).domain)
 					.stream()
 					.flatMap(ec->ec.emojis.stream())
 					.filter(e->e.visibleInPicker)

@@ -56,7 +56,7 @@ public class SettingsMainFragment extends BaseSettingsFragment<Object>{
 		setTitle(R.string.settings);
 		ArrayList<ListItem<?>> items=new ArrayList<>();
 		items.add(new SectionHeaderListItem(R.string.settings_accounts));
-		for(AccountSession session:AccountSessionManager.getInstance().getLoggedInAccounts()){
+		for(AccountSession session: AccountSessionManager.instance.getLoggedInAccounts()){
 			ImageLoaderRequest req;
 			if(session.self.avatar!=null)
 				req=new UrlImageLoaderRequest(GlobalUserPreferences.playGifs ? session.self.avatar : session.self.avatarStatic, V.dp(50), V.dp(50));

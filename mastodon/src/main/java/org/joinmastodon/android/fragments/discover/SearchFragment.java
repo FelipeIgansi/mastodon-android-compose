@@ -102,7 +102,7 @@ public class SearchFragment extends BaseStatusListFragment<SearchResult>{
 			}
 		}
 		if(res.type!=SearchResult.Type.STATUS)
-			AccountSessionManager.getInstance().getAccount(accountID).getCacheController().putRecentSearch(res);
+			AccountSessionManager.instance.getAccount(accountID).getCacheController().putRecentSearch(res);
 	}
 
 	@Override

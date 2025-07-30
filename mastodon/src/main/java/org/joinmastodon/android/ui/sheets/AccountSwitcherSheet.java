@@ -66,7 +66,7 @@ public class AccountSwitcherSheet extends BottomSheet{
 		this.activity=activity;
 		this.fragment=fragment;
 
-		accounts=AccountSessionManager.getInstance().getLoggedInAccounts().stream().map(WrappedAccount::new).collect(Collectors.toList());
+		accounts= AccountSessionManager.instance.getLoggedInAccounts().stream().map(WrappedAccount::new).collect(Collectors.toList());
 
 		list=new UsableRecyclerView(activity);
 		imgLoader=new ListImageLoaderWrapper(activity, list, list, null);
@@ -102,7 +102,7 @@ public class AccountSwitcherSheet extends BottomSheet{
 	}
 
 	private void confirmLogOut(String accountID){
-		AccountSession session=AccountSessionManager.getInstance().getAccount(accountID);
+		AccountSession session= AccountSessionManager.instance.getAccount(accountID);
 		new M3AlertDialogBuilder(activity)
 				.setMessage(activity.getString(R.string.confirm_log_out, session.getFullUsername()))
 				.setPositiveButton(R.string.log_out, (dialog, which) -> logOut(accountID))
@@ -119,7 +119,7 @@ public class AccountSwitcherSheet extends BottomSheet{
 	}
 
 	private void logOut(String accountID){
-		String activeAccount=AccountSessionManager.getInstance().getLastActiveAccountID();
+		String activeAccount= AccountSessionManager.instance.getLastActiveAccountID();
 		AccountSessionManager.get(accountID).logOut(activity, ()->{
 			if(accountID.equals(activeAccount) && onLoggedOutCallback!=null)
 				onLoggedOutCallback.run();
@@ -133,13 +133,13 @@ public class AccountSwitcherSheet extends BottomSheet{
 		progress.setMessage(activity.getString(R.string.loading));
 		progress.setCancelable(false);
 		progress.show();
-		ArrayList<AccountSession> sessions=new ArrayList<>(AccountSessionManager.getInstance().getLoggedInAccounts());
+		ArrayList<AccountSession> sessions=new ArrayList<>(AccountSessionManager.instance.getLoggedInAccounts());
 		for(AccountSession session:sessions){
 			new RevokeOauthToken(session.app.clientId, session.app.clientSecret, session.token.accessToken)
 					.setCallback(new Callback<>(){
 						@Override
 						public void onSuccess(Object result){
-							AccountSessionManager.getInstance().removeAccount(session.getID());
+							AccountSessionManager.instance.removeAccount(session.getID());
 							sessions.remove(session);
 							if(sessions.isEmpty()){
 								if(onLoggedOutCallback!=null)
@@ -152,7 +152,7 @@ public class AccountSwitcherSheet extends BottomSheet{
 
 						@Override
 						public void onError(ErrorResponse error){
-							AccountSessionManager.getInstance().removeAccount(session.getID());
+							AccountSessionManager.instance.removeAccount(session.getID());
 							sessions.remove(session);
 							if(sessions.isEmpty()){
 								if(onLoggedOutCallback!=null)
@@ -244,7 +244,7 @@ public class AccountSwitcherSheet extends BottomSheet{
 		public void onBind(AccountSession item){
 			name.setText(item.self.displayName);
 			username.setText(item.getFullUsername());
-			view.setChecked(AccountSessionManager.getInstance().getLastActiveAccountID().equals(item.getID()));
+			view.setChecked(AccountSessionManager.instance.getLastActiveAccountID().equals(item.getID()));
 		}
 
 		@Override
@@ -262,14 +262,14 @@ public class AccountSwitcherSheet extends BottomSheet{
 		@Override
 		public void onClick(){
 			dismiss();
-			if(AccountSessionManager.getInstance().getLastActiveAccountID().equals(item.getID())){
+			if(AccountSessionManager.instance.getLastActiveAccountID().equals(item.getID())){
 				if(fragment!=null){
 					fragment.setCurrentTab(R.id.tab_profile);
 				}
 				return;
 			}
-			if(AccountSessionManager.getInstance().tryGetAccount(item.getID())!=null){
-				AccountSessionManager.getInstance().setLastActiveAccountID(item.getID());
+			if(AccountSessionManager.instance.tryGetAccount(item.getID())!=null){
+				AccountSessionManager.instance.setLastActiveAccountID(item.getID());
 				((MainActivity)activity).restartHomeFragment();
 			}
 		}

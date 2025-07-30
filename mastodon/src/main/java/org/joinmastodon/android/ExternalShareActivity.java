@@ -28,7 +28,7 @@ public class ExternalShareActivity extends FragmentStackActivity{
 		UiUtils.setUserPreferredTheme(this);
 		super.onCreate(savedInstanceState);
 		if(savedInstanceState==null){
-			List<AccountSession> sessions=AccountSessionManager.getInstance().getLoggedInAccounts();
+			List<AccountSession> sessions= AccountSessionManager.instance.getLoggedInAccounts();
 			if(sessions.isEmpty()){
 				Toast.makeText(this, R.string.err_not_logged_in, Toast.LENGTH_SHORT).show();
 				finish();

@@ -187,7 +187,7 @@ public class ProfileFragment extends LoaderFragment implements ScrollableToTop, 
 		if(getArguments().containsKey("profileAccount")){
 			account=Parcels.unwrap(getArguments().getParcelable("profileAccount"));
 			profileAccountID=account.id;
-			isOwnProfile=AccountSessionManager.getInstance().isSelf(accountID, account);
+			isOwnProfile= AccountSessionManager.instance.isSelf(accountID, account);
 			loaded=true;
 			if(!isOwnProfile)
 				loadRelationship();
@@ -354,7 +354,7 @@ public class ProfileFragment extends LoaderFragment implements ScrollableToTop, 
 				return true;
 			String username=account.acct;
 			if(!username.contains("@")){
-				username+="@"+AccountSessionManager.getInstance().getAccount(accountID).domain;
+				username+="@"+ AccountSessionManager.instance.getAccount(accountID).domain;
 			}
 			getActivity().getSystemService(ClipboardManager.class).setPrimaryClip(ClipData.newPlainText(null, "@"+username));
 			UiUtils.maybeShowTextCopiedToast(getActivity());
@@ -402,7 +402,7 @@ public class ProfileFragment extends LoaderFragment implements ScrollableToTop, 
 					@Override
 					public void onSuccess(Account result){
 						account=result;
-						isOwnProfile=AccountSessionManager.getInstance().isSelf(accountID, account);
+						isOwnProfile= AccountSessionManager.instance.isSelf(accountID, account);
 						bindHeaderView();
 						dataLoaded();
 						if(!tabLayoutMediator.isAttached())
@@ -410,7 +410,7 @@ public class ProfileFragment extends LoaderFragment implements ScrollableToTop, 
 						if(!isOwnProfile)
 							loadRelationship();
 						else
-							AccountSessionManager.getInstance().updateAccountInfo(accountID, account);
+							AccountSessionManager.instance.updateAccountInfo(accountID, account);
 						if(refreshing){
 							refreshing=false;
 							refreshLayout.setRefreshing(false);
@@ -615,7 +615,7 @@ public class ProfileFragment extends LoaderFragment implements ScrollableToTop, 
 		name.setText(ssb);
 		setTitle(ssb);
 
-		boolean isSelf=AccountSessionManager.getInstance().isSelf(accountID, account);
+		boolean isSelf= AccountSessionManager.instance.isSelf(accountID, account);
 
 		if(account.locked){
 			ssb=new SpannableStringBuilder(account.username);
@@ -648,7 +648,7 @@ public class ProfileFragment extends LoaderFragment implements ScrollableToTop, 
 		UiUtils.loadCustomEmojiInTextView(name);
 		UiUtils.loadCustomEmojiInTextView(bio);
 
-		if(AccountSessionManager.getInstance().isSelf(accountID, account)){
+		if(AccountSessionManager.instance.isSelf(accountID, account)){
 			actionButton.setText(R.string.edit_profile);
 			TypedArray ta=actionButton.getContext().obtainStyledAttributes(R.style.Widget_Mastodon_M3_Button_Tonal, new int[]{android.R.attr.background});
 			actionButton.setBackground(ta.getDrawable(0));
@@ -1186,7 +1186,7 @@ public class ProfileFragment extends LoaderFragment implements ScrollableToTop, 
 					public void onSuccess(Account result){
 						savingEdits=false;
 						account=result;
-						AccountSessionManager.getInstance().updateAccountInfo(accountID, account);
+						AccountSessionManager.instance.updateAccountInfo(accountID, account);
 						exitEditMode();
 						setActionProgressVisible(false);
 					}
@@ -1270,7 +1270,7 @@ public class ProfileFragment extends LoaderFragment implements ScrollableToTop, 
 	private void onFabClick(View v){
 		Bundle args=new Bundle();
 		args.putString("account", accountID);
-		if(!AccountSessionManager.getInstance().isSelf(accountID, account)){
+		if(!AccountSessionManager.instance.isSelf(accountID, account)){
 			args.putString("prefilledText", '@'+account.acct+' ');
 		}
 		Nav.go(getActivity(), ComposeFragment.class, args);

@@ -45,7 +45,7 @@ object GlobalUserPreferences {
     showCWs = prefs.getBoolean("showCWs", true)
     hideSensitiveMedia = prefs.getBoolean("hideSensitive", true)
     if (!prefs.getBoolean("perAccountMigrationDone", false)) {
-      val account = AccountSessionManager.getInstance().getLastActiveAccount()
+      val account = AccountSessionManager.instance.getLastActiveAccount()
       if (account != null) {
         val accPrefs = account.getRawLocalPreferences()
         showInteractionCounts = accPrefs.getBoolean("interactionCounts", true)
@@ -81,7 +81,7 @@ object GlobalUserPreferences {
 	fun isOptedOutOfPreReplySheet(
     type: PreReplySheetType?,
     account: Account?,
-    accountID: String?
+    accountID: String
   ): Boolean {
     if (preReplyPrefs.getBoolean("opt_out_$type", false)) return true
     if (account == null) return false
@@ -94,8 +94,8 @@ object GlobalUserPreferences {
   }
 
   @JvmStatic
-	fun optOutOfPreReplySheet(type: PreReplySheetType?, account: Account?, accountID: String?) {
-    val key: String?
+	fun optOutOfPreReplySheet(type: PreReplySheetType?, account: Account?, accountID: String) {
+    val key: String
     if (account == null) {
       key = "opt_out_$type"
     } else {

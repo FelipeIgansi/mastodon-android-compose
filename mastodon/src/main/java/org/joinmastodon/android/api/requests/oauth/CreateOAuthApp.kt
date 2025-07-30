@@ -1,8 +1,8 @@
 package org.joinmastodon.android.api.requests.oauth
 
 import org.joinmastodon.android.api.MastodonAPIRequest
-import org.joinmastodon.android.api.session.AccountSessionManager.SCOPE
-import org.joinmastodon.android.api.session.AccountSessionManager.REDIRECT_URI
+import org.joinmastodon.android.api.session.AccountSessionManager.Companion.REDIRECT_URI
+import org.joinmastodon.android.api.session.AccountSessionManager.Companion.SCOPE
 import org.joinmastodon.android.model.Application
 
 class CreateOAuthApp : MastodonAPIRequest<Application>(

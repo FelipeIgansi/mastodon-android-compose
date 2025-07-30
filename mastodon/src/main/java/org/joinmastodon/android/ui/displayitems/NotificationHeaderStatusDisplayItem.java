@@ -60,7 +60,7 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 				.map(a->new UrlImageLoaderRequest(GlobalUserPreferences.playGifs ? a.avatar : a.avatarStatic, V.dp(50), V.dp(50)))
 				.collect(Collectors.toList());
 
-		if(notification.notification.type==NotificationType.POLL && AccountSessionManager.getInstance().isSelf(accountID, notification.accounts.get(0))){
+		if(notification.notification.type==NotificationType.POLL && AccountSessionManager.instance.isSelf(accountID, notification.accounts.get(0))){
 			text=parentFragment.getString(R.string.own_poll_ended);
 		}else{
 			Account account=notification.accounts.get(0);

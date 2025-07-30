@@ -60,7 +60,7 @@ public class SettingsServerAboutFragment extends LoaderFragment{
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		accountID=getArguments().getString("account");
-		instance=AccountSessionManager.getInstance().getInstanceInfo(AccountSessionManager.get(accountID).domain);
+		instance= AccountSessionManager.instance.getInstanceInfo(AccountSessionManager.get(accountID).domain);
 		loadData();
 	}
 

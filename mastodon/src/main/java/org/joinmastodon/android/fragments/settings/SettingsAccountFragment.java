@@ -70,7 +70,7 @@ public class SettingsAccountFragment extends BaseSettingsFragment<Void>{
 		}
 
 		items.add(new SectionHeaderListItem(R.string.manage_account));
-		items.add(new ListItem<>(R.string.switch_to_this_account, 0, R.drawable.ic_switch_account_24px, AccountSessionManager.getInstance().getLastActiveAccountID().equals(accountID) ? null : this::onSwitchAccountClick));
+		items.add(new ListItem<>(R.string.switch_to_this_account, 0, R.drawable.ic_switch_account_24px, AccountSessionManager.instance.getLastActiveAccountID().equals(accountID) ? null : this::onSwitchAccountClick));
 		items.add(new ListItem<>(R.string.delete_account, 0, R.drawable.ic_delete_forever_24px, this::onDeleteAccountClick, R.attr.colorM3Error, false));
 		items.add(new ListItem<>(R.string.log_out, 0, R.drawable.ic_logout_24px, this::onLogOutClick, R.attr.colorM3Error, false));
 
@@ -214,19 +214,19 @@ public class SettingsAccountFragment extends BaseSettingsFragment<Void>{
 	}
 
 	private void onSwitchAccountClick(ListItem<?> item){
-		if(AccountSessionManager.getInstance().tryGetAccount(accountID)!=null){
-			AccountSessionManager.getInstance().setLastActiveAccountID(accountID);
+		if(AccountSessionManager.instance.tryGetAccount(accountID)!=null){
+			AccountSessionManager.instance.setLastActiveAccountID(accountID);
 			((MainActivity)getActivity()).restartHomeFragment();
 		}
 	}
 
 	private void onDeleteAccountClick(ListItem<?> item){
-		AccountSession session=AccountSessionManager.getInstance().getAccount(accountID);
+		AccountSession session= AccountSessionManager.instance.getAccount(accountID);
 		UiUtils.launchWebBrowser(getActivity(), "https://"+session.domain+"/settings/delete");
 	}
 
 	private void onLogOutClick(ListItem<?> item_){
-		AccountSession session=AccountSessionManager.getInstance().getAccount(accountID);
+		AccountSession session= AccountSessionManager.instance.getAccount(accountID);
 		new M3AlertDialogBuilder(getActivity())
 				.setMessage(getString(R.string.confirm_log_out, session.getFullUsername()))
 				.setPositiveButton(R.string.log_out, (dialog, which)->AccountSessionManager.get(accountID).logOut(getActivity(), ()->{

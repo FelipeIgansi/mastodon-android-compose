@@ -197,7 +197,7 @@ public class HeaderStatusDisplayItem extends StatusDisplayItem{
 						Toast.makeText(activity, activity.getString(rel.following ? R.string.followed_user : rel.requested ? R.string.following_user_requested : R.string.unfollowed_user, account.getDisplayUsername()), Toast.LENGTH_SHORT).show();
 					});
 				}else if(id==R.id.bookmark){
-					AccountSessionManager.getInstance().getAccount(item.accountID).getStatusInteractionController().setBookmarked(item.status, !item.status.bookmarked);
+					AccountSessionManager.instance.getAccount(item.accountID).getStatusInteractionController().setBookmarked(item.status, !item.status.bookmarked);
 				}else if(id==R.id.share){
 					UiUtils.openSystemShareSheet(activity, item.status);
 				}else if(id==R.id.translate){
@@ -311,7 +311,7 @@ public class HeaderStatusDisplayItem extends StatusDisplayItem{
 			Account account=item.user;
 			Relationship relationship=item.parentFragment.getRelationship(account.id);
 			Menu menu=optionsMenu.getMenu();
-			boolean isOwnPost=AccountSessionManager.getInstance().isSelf(item.parentFragment.getAccountID(), account);
+			boolean isOwnPost= AccountSessionManager.instance.isSelf(item.parentFragment.getAccountID(), account);
 			boolean canTranslate=item.status!=null && item.status.getContentStatus().isEligibleForTranslation();
 			MenuItem translate=menu.findItem(R.id.translate);
 			translate.setVisible(canTranslate);

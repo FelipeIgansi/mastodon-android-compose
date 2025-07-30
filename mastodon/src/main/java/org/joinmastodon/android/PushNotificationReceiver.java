@@ -64,7 +64,7 @@ public class PushNotificationReceiver extends BroadcastReceiver{
 			if(!TextUtils.isEmpty(pushAccountID) && !TextUtils.isEmpty(k) && !TextUtils.isEmpty(p) && !TextUtils.isEmpty(s)){
 				MastodonAPIController.runInBackground(()->{
 					try{
-						List<AccountSession> accounts=AccountSessionManager.getInstance().getLoggedInAccounts();
+						List<AccountSession> accounts= AccountSessionManager.instance.getLoggedInAccounts();
 						AccountSession account=null;
 						for(AccountSession acc:accounts){
 							if(pushAccountID.equals(acc.pushAccountID)){
@@ -81,7 +81,7 @@ public class PushNotificationReceiver extends BroadcastReceiver{
 							return;
 						}
 						String accountID=account.getID();
-						PushNotification pn=AccountSessionManager.getInstance().getAccount(accountID).getPushSubscriptionManager().decryptNotification(k, p, s);
+						PushNotification pn= AccountSessionManager.instance.getAccount(accountID).getPushSubscriptionManager().decryptNotification(k, p, s);
 						new GetNotificationByID(pn.notificationId)
 								.setCallback(new Callback<>(){
 									@Override
@@ -125,8 +125,8 @@ public class PushNotificationReceiver extends BroadcastReceiver{
 
 	private void doNotify(Context context, PushNotification pn, String accountID, org.joinmastodon.android.model.Notification notification, Drawable avatar){
 		NotificationManager nm=context.getSystemService(NotificationManager.class);
-		Account self=AccountSessionManager.getInstance().getAccount(accountID).self;
-		String accountName="@"+self.username+"@"+AccountSessionManager.getInstance().getAccount(accountID).domain;
+		Account self= AccountSessionManager.instance.getAccount(accountID).self;
+		String accountName="@"+self.username+"@"+ AccountSessionManager.instance.getAccount(accountID).domain;
 		Notification.Builder builder;
 		if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
 			boolean hasGroup=false;
@@ -182,13 +182,13 @@ public class PushNotificationReceiver extends BroadcastReceiver{
 		if(avatar!=null){
 			builder.setLargeIcon(UiUtils.getBitmapFromDrawable(avatar));
 		}
-		if(AccountSessionManager.getInstance().getLoggedInAccounts().size()>1){
+		if(AccountSessionManager.instance.getLoggedInAccounts().size()>1){
 			builder.setSubText(accountName);
 		}
 		String notificationTag=accountID+"_"+(notification==null ? 0 : notification.id);
 		if(notification!=null && (notification.type==NotificationType.MENTION)){
 			ArrayList<String> mentions=new ArrayList<>();
-			String ownID=AccountSessionManager.getInstance().getAccount(accountID).self.id;
+			String ownID= AccountSessionManager.instance.getAccount(accountID).self.id;
 			if(!notification.status.account.id.equals(ownID))
 				mentions.add('@'+notification.status.account.acct);
 			for(Mention mention:notification.status.mentions){

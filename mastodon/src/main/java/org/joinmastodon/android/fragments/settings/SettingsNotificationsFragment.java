@@ -92,7 +92,7 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 			ps.alerts.follow=followersItem.checked;
 			ps.alerts.poll=pollsItem.checked;
 			ps.alerts.status=statusesItem.checked;
-			AccountSessionManager.getInstance().getAccount(accountID).getPushSubscriptionManager().updatePushSettings(pushSubscription);
+			AccountSessionManager.instance.getAccount(accountID).getPushSubscriptionManager().updatePushSettings(pushSubscription);
 		}
 	}
 
@@ -150,7 +150,7 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 	private PushSubscription getPushSubscription(){
 		if(pushSubscription!=null)
 			return pushSubscription;
-		AccountSession session=AccountSessionManager.getInstance().getAccount(accountID);
+		AccountSession session= AccountSessionManager.instance.getAccount(accountID);
 		if(session.pushSubscription==null){
 			pushSubscription=new PushSubscription();
 			pushSubscription.alerts=PushSubscription.Alerts.ofAll();
@@ -198,7 +198,7 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 		AlertDialog alert=new M3AlertDialogBuilder(getActivity())
 				.setTitle(R.string.pause_all_notifications_title)
 				.setSupportingText(time>System.currentTimeMillis() ? getString(R.string.pause_notifications_ends, UiUtils.formatRelativeTimestampAsMinutesAgo(getActivity(), Instant.ofEpochMilli(time), false)) : null)
-				.setSingleChoiceItems((String[])Arrays.stream(durationOptions).mapToObj(d->UiUtils.formatDuration(getActivity(), d)).toArray(String[]::new), -1, (dlg, item)->{
+				.setSingleChoiceItems(Arrays.stream(durationOptions).mapToObj(d->UiUtils.formatDuration(getActivity(), d)).toArray(String[]::new), -1, (dlg, item)->{
 					AccountSessionManager.get(accountID).getLocalPreferences().setNotificationsPauseEndTime(System.currentTimeMillis()+durationOptions[item]*1000L);
 					dlg.dismiss();
 				})

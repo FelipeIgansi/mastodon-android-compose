@@ -68,7 +68,7 @@ public class MainActivity extends FragmentStackActivity{
 			String accountID=intent.getStringExtra("accountID");
 			AccountSession accountSession;
 			try{
-				accountSession=AccountSessionManager.getInstance().getAccount(accountID);
+				accountSession= AccountSessionManager.instance.getAccount(accountID);
 			}catch(IllegalStateException x){
 				return;
 			}
@@ -76,7 +76,7 @@ public class MainActivity extends FragmentStackActivity{
 				Notification notification=Parcels.unwrap(intent.getParcelableExtra("notification"));
 				showFragmentForNotification(notification, accountID);
 			}else{
-				AccountSessionManager.getInstance().setLastActiveAccountID(accountID);
+				AccountSessionManager.instance.setLastActiveAccountID(accountID);
 				Bundle args=new Bundle();
 				args.putString("account", accountID);
 				args.putString("tab", "notifications");
@@ -102,7 +102,7 @@ public class MainActivity extends FragmentStackActivity{
 			return;
 		AccountSession session;
 		if(accountID==null)
-			session=AccountSessionManager.getInstance().getLastActiveAccount();
+			session= AccountSessionManager.instance.getLastActiveAccount();
 		else
 			session=AccountSessionManager.get(accountID);
 		if(session==null || !session.activated)
@@ -165,7 +165,7 @@ public class MainActivity extends FragmentStackActivity{
 	}
 
 	private void showCompose(){
-		AccountSession session=AccountSessionManager.getInstance().getLastActiveAccount();
+		AccountSession session= AccountSessionManager.instance.getLastActiveAccount();
 		if(session==null || !session.activated)
 			return;
 		ComposeFragment compose=new ComposeFragment();
@@ -182,24 +182,24 @@ public class MainActivity extends FragmentStackActivity{
 	}
 
 	public void restartHomeFragment(){
-		if(AccountSessionManager.getInstance().getLoggedInAccounts().isEmpty()){
+		if(AccountSessionManager.instance.getLoggedInAccounts().isEmpty()){
 			showFragmentClearingBackStack(new SplashFragment());
 		}else{
-			AccountSessionManager.getInstance().maybeUpdateLocalInfo();
+			AccountSessionManager.instance.maybeUpdateLocalInfo();
 			AccountSession session;
 			Bundle args=new Bundle();
 			Intent intent=getIntent();
 			if(intent.getBooleanExtra("fromNotification", false)){
 				String accountID=intent.getStringExtra("accountID");
 				try{
-					session=AccountSessionManager.getInstance().getAccount(accountID);
+					session= AccountSessionManager.instance.getAccount(accountID);
 					if(!intent.hasExtra("notification"))
 						args.putString("tab", "notifications");
 				}catch(IllegalStateException x){
-					session=AccountSessionManager.getInstance().getLastActiveAccount();
+					session= AccountSessionManager.instance.getLastActiveAccount();
 				}
 			}else{
-				session=AccountSessionManager.getInstance().getLastActiveAccount();
+				session= AccountSessionManager.instance.getLastActiveAccount();
 			}
 			args.putString("account", session.getID());
 			Fragment fragment=session.activated ? new HomeFragment() : new AccountActivationFragment();

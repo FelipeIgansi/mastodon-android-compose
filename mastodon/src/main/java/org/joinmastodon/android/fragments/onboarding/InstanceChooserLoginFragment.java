@@ -58,7 +58,7 @@ public class InstanceChooserLoginFragment extends InstanceCatalogFragment{
 
 	@Override
 	protected void proceedWithAuthOrSignup(Instance instance){
-		AccountSessionManager.getInstance().authenticate(getActivity(), instance);
+		AccountSessionManager.instance.authenticate(getActivity(), instance);
 	}
 
 	@Override

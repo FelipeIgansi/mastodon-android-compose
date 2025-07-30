@@ -85,11 +85,11 @@ public class AccountTimelineFragment extends StatusListFragment{
 	}
 
 	protected void onStatusCreated(Status status){
-		if(!AccountSessionManager.getInstance().isSelf(accountID, status.account))
+		if(!AccountSessionManager.instance.isSelf(accountID, status.account))
 			return;
 		if(filter==GetAccountStatuses.Filter.DEFAULT){
 			// Keep replies to self, discard all other replies
-			if(status.inReplyToAccountId!=null && !status.inReplyToAccountId.equals(AccountSessionManager.getInstance().getAccount(accountID).self.id))
+			if(status.inReplyToAccountId!=null && !status.inReplyToAccountId.equals(AccountSessionManager.instance.getAccount(accountID).self.id))
 				return;
 		}else if(filter==GetAccountStatuses.Filter.MEDIA){
 			if(status.mediaAttachments.isEmpty())

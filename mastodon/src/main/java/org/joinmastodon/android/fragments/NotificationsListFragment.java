@@ -95,7 +95,7 @@ public class NotificationsListFragment extends BaseNotificationsListFragment{
 			endMark.setVisibility(View.GONE);
 		if(offset==0)
 			reloadPolicy();
-		AccountSessionManager.getInstance()
+		AccountSessionManager.instance
 				.getAccount(accountID).getCacheController()
 				.getNotifications(offset>0 ? maxID : null, count, onlyMentions, refreshing && !reloadingFromCache, new SimpleCallback<>(this){
 					@Override

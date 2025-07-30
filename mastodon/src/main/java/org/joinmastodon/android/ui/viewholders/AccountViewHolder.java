@@ -145,7 +145,7 @@ public class AccountViewHolder extends BindableViewHolder<AccountViewModel> impl
 		if(relationships==null || accessoryType!=AccessoryType.BUTTON)
 			return;
 		Relationship rel=relationships.get(item.account.id);
-		if(rel==null || AccountSessionManager.getInstance().isSelf(accountID, item.account)){
+		if(rel==null || AccountSessionManager.instance.isSelf(accountID, item.account)){
 			button.setVisibility(View.GONE);
 		}else{
 			button.setVisibility(View.VISIBLE);

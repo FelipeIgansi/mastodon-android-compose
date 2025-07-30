@@ -187,11 +187,11 @@ public class ComposeFragment extends MastodonToolbarFragment implements ComposeE
 		setRetainInstance(true);
 
 		accountID=getArguments().getString("account");
-		AccountSession session=AccountSessionManager.getInstance().getAccount(accountID);
+		AccountSession session= AccountSessionManager.instance.getAccount(accountID);
 		self=session.self;
 		instanceDomain=session.domain;
-		customEmojis=AccountSessionManager.getInstance().getCustomEmojis(instanceDomain);
-		instance=AccountSessionManager.getInstance().getInstanceInfo(instanceDomain);
+		customEmojis= AccountSessionManager.instance.getCustomEmojis(instanceDomain);
+		instance= AccountSessionManager.instance.getInstanceInfo(instanceDomain);
 		if(getArguments().containsKey("editStatus")){
 			editingStatus=Parcels.unwrap(getArguments().getParcelable("editStatus"));
 		}
@@ -200,7 +200,7 @@ public class ComposeFragment extends MastodonToolbarFragment implements ComposeE
 			return;
 		}
 		if(customEmojis.isEmpty()){
-			AccountSessionManager.getInstance().updateInstanceInfo(instanceDomain);
+			AccountSessionManager.instance.updateInstanceInfo(instanceDomain);
 		}
 
 		if(instance.maxTootChars>0)
@@ -472,7 +472,7 @@ public class ComposeFragment extends MastodonToolbarFragment implements ComposeE
 				start=Math.max(0, start-1);
 				CharSequence changedText=s.subSequence(start, realStart+count);
 				String raw=changedText.toString();
-				Editable editable=(Editable) s;
+				Editable editable= s;
 				// 1. find mentions, hashtags, and emoji shortcodes in any freshly inserted text, and put spans over them
 				if(raw.contains("@") || raw.contains("#") || raw.contains(":")){
 					Matcher matcher=AUTO_COMPLETE_PATTERN.matcher(changedText);
@@ -520,7 +520,7 @@ public class ComposeFragment extends MastodonToolbarFragment implements ComposeE
 		if(replyTo!=null){
 			replyText.setText(getString(R.string.in_reply_to, replyTo.account.displayName));
 			ArrayList<String> mentions=new ArrayList<>();
-			String ownID=AccountSessionManager.getInstance().getAccount(accountID).self.id;
+			String ownID= AccountSessionManager.instance.getAccount(accountID).self.id;
 			if(!replyTo.account.id.equals(ownID))
 				mentions.add('@'+replyTo.account.acct);
 			for(Mention mention:replyTo.mentions){
@@ -536,7 +536,7 @@ public class ComposeFragment extends MastodonToolbarFragment implements ComposeE
 				ignoreSelectionChanges=true;
 				mainEditText.setSelection(mainEditText.length());
 				ignoreSelectionChanges=false;
-				if(!TextUtils.isEmpty(replyTo.spoilerText) && AccountSessionManager.getInstance().isSelf(accountID, replyTo.account)){
+				if(!TextUtils.isEmpty(replyTo.spoilerText) && AccountSessionManager.instance.isSelf(accountID, replyTo.account)){
 					hasSpoiler=true;
 					spoilerWrap.setVisibility(View.VISIBLE);
 					spoilerEdit.setText(replyTo.spoilerText);
@@ -996,11 +996,11 @@ public class ComposeFragment extends MastodonToolbarFragment implements ComposeE
 			statusVisibility=(StatusPrivacy) savedInstanceState.getSerializable("visibility");
 		}
 
-		Preferences prevPrefs=AccountSessionManager.getInstance().getAccount(accountID).preferences;
+		Preferences prevPrefs= AccountSessionManager.instance.getAccount(accountID).preferences;
 		if(prevPrefs!=null){
 			applyPreferencesForPostVisibility(prevPrefs, savedInstanceState);
 		}
-		AccountSessionManager.getInstance().getAccount(accountID).reloadPreferences(prefs->{
+		AccountSessionManager.instance.getAccount(accountID).reloadPreferences(prefs->{
 			applyPreferencesForPostVisibility(prefs, savedInstanceState);
 		});
 	}
@@ -1189,7 +1189,7 @@ public class ComposeFragment extends MastodonToolbarFragment implements ComposeE
 	}
 
 	private void showLanguageAlert(){
-		Preferences prefs=AccountSessionManager.getInstance().getAccount(accountID).preferences;
+		Preferences prefs= AccountSessionManager.instance.getAccount(accountID).preferences;
 		ComposeLanguageAlertViewController vc=new ComposeLanguageAlertViewController(getActivity(), prefs!=null ? prefs.postingDefaultLanguage : null, postLang, mainEditText.getText().toString());
 		final AlertDialog dlg=new M3AlertDialogBuilder(getActivity())
 				.setTitle(R.string.language)

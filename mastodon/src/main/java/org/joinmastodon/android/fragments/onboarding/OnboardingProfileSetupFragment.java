@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,7 +20,6 @@ import org.joinmastodon.android.api.requests.accounts.UpdateAccountCredentials;
 import org.joinmastodon.android.api.session.AccountSessionManager;
 import org.joinmastodon.android.fragments.HomeFragment;
 import org.joinmastodon.android.model.Account;
-import org.joinmastodon.android.model.AccountField;
 import org.joinmastodon.android.model.viewmodel.CheckableListItem;
 import org.joinmastodon.android.ui.M3AlertDialogBuilder;
 import org.joinmastodon.android.ui.OutlineProviders;
@@ -30,10 +28,8 @@ import org.joinmastodon.android.ui.adapters.GenericListItemsAdapter;
 import org.joinmastodon.android.ui.photoviewer.AvatarCropper;
 import org.joinmastodon.android.ui.utils.UiUtils;
 import org.joinmastodon.android.ui.viewholders.ListItemViewHolder;
-import org.joinmastodon.android.ui.views.ReorderableLinearLayout;
 import org.joinmastodon.android.utils.ElevationOnScrollListener;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import me.grishka.appkit.Nav;
@@ -93,7 +89,7 @@ public class OnboardingProfileSetupFragment extends ToolbarFragment{
 		avaImage.setOutlineProvider(OutlineProviders.roundedRect(24));
 		avaImage.setClipToOutline(true);
 
-		Account account=AccountSessionManager.getInstance().getAccount(accountID).self;
+		Account account= AccountSessionManager.instance.getAccount(accountID).self;
 		if(savedInstanceState==null){
 			nameEdit.setText(account.displayName);
 		}
@@ -133,7 +129,7 @@ public class OnboardingProfileSetupFragment extends ToolbarFragment{
 				.setCallback(new Callback<>(){
 					@Override
 					public void onSuccess(Account result){
-						AccountSessionManager.getInstance().updateAccountInfo(accountID, result);
+						AccountSessionManager.instance.updateAccountInfo(accountID, result);
 						Bundle args=new Bundle();
 						args.putString("account", accountID);
 						Nav.goClearingStack(getActivity(), HomeFragment.class, args);

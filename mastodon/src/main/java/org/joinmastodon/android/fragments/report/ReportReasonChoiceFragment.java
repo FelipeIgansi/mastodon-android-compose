@@ -5,13 +5,15 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.squareup.otto.Subscribe;
 
@@ -36,8 +38,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 import me.grishka.appkit.Nav;
 import me.grishka.appkit.utils.BindableViewHolder;
 import me.grishka.appkit.utils.MergeRecyclerAdapter;
@@ -94,7 +94,7 @@ public class ReportReasonChoiceFragment extends StatusListFragment{
 
 		items.add(new ChoiceItem(getString(R.string.report_reason_personal), getString(R.string.report_reason_personal_subtitle), ReportReason.PERSONAL.name()));
 		items.add(new ChoiceItem(getString(R.string.report_reason_spam), getString(R.string.report_reason_spam_subtitle), ReportReason.SPAM.name()));
-		Instance inst=AccountSessionManager.getInstance().getInstanceInfo(AccountSessionManager.getInstance().getAccount(accountID).domain);
+		Instance inst= AccountSessionManager.instance.getInstanceInfo(AccountSessionManager.instance.getAccount(accountID).domain);
 		if(inst!=null && inst.rules!=null && !inst.rules.isEmpty()){
 			items.add(new ChoiceItem(getString(R.string.report_reason_violation), getString(R.string.report_reason_violation_subtitle), ReportReason.VIOLATION.name()));
 		}

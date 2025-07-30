@@ -107,7 +107,7 @@ public class SearchQueryFragment extends MastodonRecyclerFragment<SearchResultVi
 	@Override
 	protected void doLoadData(int offset, int count){
 		if(isInRecentMode()){
-			AccountSessionManager.getInstance().getAccount(accountID).getCacheController().getRecentSearches(results->{
+			AccountSessionManager.instance.getAccount(accountID).getCacheController().getRecentSearches(results->{
 				if(getActivity()==null)
 					return;
 
@@ -395,7 +395,7 @@ public class SearchQueryFragment extends MastodonRecyclerFragment<SearchResultVi
 
 	private void openHashtag(SearchResult res){
 		UiUtils.openHashtagTimeline(getActivity(), accountID, res.hashtag);
-		AccountSessionManager.getInstance().getAccount(accountID).getCacheController().putRecentSearch(res);
+		AccountSessionManager.instance.getAccount(accountID).getCacheController().putRecentSearch(res);
 	}
 
 	private boolean isInRecentMode(){
@@ -439,7 +439,7 @@ public class SearchQueryFragment extends MastodonRecyclerFragment<SearchResultVi
 	}
 
 	private void onClearRecentClick(){
-		AccountSessionManager.getInstance().getAccount(accountID).getCacheController().clearRecentSearches();
+		AccountSessionManager.instance.getAccount(accountID).getCacheController().clearRecentSearches();
 		if(isInRecentMode()){
 			data.clear();
 			recentsHeader.setVisible(false);
@@ -569,7 +569,7 @@ public class SearchQueryFragment extends MastodonRecyclerFragment<SearchResultVi
 		@Override
 		public void onClick(){
 			super.onClick();
-			AccountSessionManager.getInstance().getAccount(accountID).getCacheController().putRecentSearch(searchResult);
+			AccountSessionManager.instance.getAccount(accountID).getCacheController().putRecentSearch(searchResult);
 		}
 	}
 }

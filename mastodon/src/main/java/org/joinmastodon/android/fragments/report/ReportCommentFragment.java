@@ -82,7 +82,7 @@ public class ReportCommentFragment extends MastodonToolbarFragment{
 		forwardSwitch=view.findViewById(R.id.forward_switch);
 		forwardBtn=view.findViewById(R.id.forward_report);
 		forwardBtn.setOnClickListener(v->forwardSwitch.toggle());
-		String myDomain=AccountSessionManager.getInstance().getAccount(accountID).domain;
+		String myDomain= AccountSessionManager.instance.getAccount(accountID).domain;
 		if(!TextUtils.isEmpty(reportAccount.getDomain()) && !myDomain.equalsIgnoreCase(reportAccount.getDomain())){
 			TextView forwardTitle=view.findViewById(R.id.forward_title);
 			forwardTitle.setText(getString(R.string.forward_report_to_server, reportAccount.getDomain()));

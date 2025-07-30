@@ -170,7 +170,7 @@ class PushSubscriptionManager(private val accountID: String) {
     private fun registerAllAccountsForPush(forceReRegister: Boolean) {
       if (!arePushNotificationsAvailable()) return
 
-      AccountSessionManager.getInstance().loggedInAccounts.forEach { session ->
+      AccountSessionManager.instance.loggedInAccounts.forEach { session ->
         when {
           session.pushSubscription == null || forceReRegister -> {
             session.pushSubscriptionManager.registerAccountForPush(session.pushSubscription)
@@ -244,7 +244,7 @@ class PushSubscriptionManager(private val accountID: String) {
         return@runInBackground
       }
 
-      val session = AccountSessionManager.getInstance().tryGetAccount(accountID)
+      val session = AccountSessionManager.instance.tryGetAccount(accountID)
         ?: return@runInBackground
 
       with(session) {
@@ -254,7 +254,7 @@ class PushSubscriptionManager(private val accountID: String) {
         pushAccountID = encodedKeys.accountID
       }
 
-      AccountSessionManager.getInstance().writeAccountPushSettings(accountID)
+      AccountSessionManager.instance.writeAccountPushSettings(accountID)
 
       RegisterForPushNotifications(
         deviceToken!!,
@@ -266,9 +266,9 @@ class PushSubscriptionManager(private val accountID: String) {
       ).setCallback(object : Callback<PushSubscription> {
         override fun onSuccess(result: PushSubscription) {
           MastodonAPIController.runInBackground {
-            AccountSessionManager.getInstance().tryGetAccount(accountID)?.let { session ->
+            AccountSessionManager.instance.tryGetAccount(accountID)?.let { session ->
               session.pushSubscription = result
-              AccountSessionManager.getInstance().writeAccountPushSettings(accountID)
+              AccountSessionManager.instance.writeAccountPushSettings(accountID)
               Log.d(TAG, "Successfully registered $accountID for push notifications")
             }
           }
@@ -293,13 +293,13 @@ class PushSubscriptionManager(private val accountID: String) {
     UpdatePushSettings(subscription.alerts, subscription.policy)
       .setCallback(object : Callback<PushSubscription> {
         override fun onSuccess(result: PushSubscription) {
-          AccountSessionManager.getInstance().tryGetAccount(accountID)?.let { session ->
+          AccountSessionManager.instance.tryGetAccount(accountID)?.let { session ->
             if (result.policy != subscription.policy) {
               result.policy = subscription.policy
             }
             session.pushSubscription = result
             session.needUpdatePushSettings = false
-            AccountSessionManager.getInstance().writeAccountPushSettings(accountID)
+            AccountSessionManager.instance.writeAccountPushSettings(accountID)
           }
         }
 
@@ -308,10 +308,10 @@ class PushSubscriptionManager(private val accountID: String) {
           if (mastodonError?.httpStatus == 404) {
             registerAccountForPush(subscription)
           } else {
-            AccountSessionManager.getInstance().tryGetAccount(accountID)?.let { session ->
+            AccountSessionManager.instance.tryGetAccount(accountID)?.let { session ->
               session.needUpdatePushSettings = true
               session.pushSubscription = subscription
-              AccountSessionManager.getInstance().writeAccountPushSettings(accountID)
+              AccountSessionManager.instance.writeAccountPushSettings(accountID)
             }
           }
         }
@@ -365,7 +365,7 @@ class PushSubscriptionManager(private val accountID: String) {
     if (privateKey == null) {
       try {
         val kf = KeyFactory.getInstance("EC")
-        val account = AccountSessionManager.getInstance().getAccount(accountID)
+        val account = AccountSessionManager.instance.getAccount(accountID)
         val flag = Base64.URL_SAFE
 
         privateKey = kf.generatePrivate(PKCS8EncodedKeySpec(Base64.decode(account.pushPrivateKey, flag)))

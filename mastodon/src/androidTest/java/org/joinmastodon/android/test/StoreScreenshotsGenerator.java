@@ -78,7 +78,7 @@ public class StoreScreenshotsGenerator{
 		Bundle args=InstrumentationRegistry.getArguments();
 		InstrumentationRegistry.getInstrumentation().setInTouchMode(true);
 
-		AccountSession session=AccountSessionManager.getInstance().getAccount(AccountSessionManager.getInstance().getLastActiveAccountID());
+		AccountSession session= AccountSessionManager.instance.getAccount(AccountSessionManager.instance.getLastActiveAccountID());
 		MastodonApp.context.deleteDatabase(session.getID()+".db");
 
 		onView(isRoot()).perform(waitId(R.id.more, LOAD_WAIT_TIMEOUT));

@@ -49,7 +49,7 @@ public class DecentralizationExplainerSheet extends BottomSheet{
 		if(TextUtils.isEmpty(domain))
 			domain=AccountSessionManager.get(accountID).domain;
 		handleStr="@"+account.username+"@"+domain;
-		boolean isSelf=AccountSessionManager.getInstance().isSelf(accountID, account);
+		boolean isSelf= AccountSessionManager.instance.isSelf(accountID, account);
 
 		handleTitle.setText(isSelf ? R.string.handle_title_own : R.string.handle_title);
 		handle.setText(handleStr);

@@ -84,7 +84,7 @@ public class DonationWebViewFragment extends WebViewFragment{
 
 	private void onSuccess(){
 		String campaignID=getArguments().getString("campaignID");
-		AccountSessionManager.getInstance().markDonationCampaignAsDismissed(campaignID);
+		AccountSessionManager.instance.markDonationCampaignAsDismissed(campaignID);
 		E.post(new DismissDonationCampaignBannerEvent(campaignID));
 		getActivity().setResult(Activity.RESULT_OK, new Intent().putExtra("postText", getArguments().getString("successPostText")));
 		getActivity().finish();

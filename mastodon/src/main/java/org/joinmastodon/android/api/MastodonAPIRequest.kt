@@ -91,7 +91,7 @@ abstract class MastodonAPIRequest<T> : APIRequest<T> {
 
   fun exec(accountID: String): MastodonAPIRequest<T> {
     try {
-      account = AccountSessionManager.getInstance().getAccount(accountID)
+      account = AccountSessionManager.instance.getAccount(accountID)
       domain = account?.domain
       account?.apiController?.submitRequest(this)
     } catch (x: Exception) {
@@ -104,14 +104,14 @@ abstract class MastodonAPIRequest<T> : APIRequest<T> {
 
   fun execNoAuth(domain: String): MastodonAPIRequest<T> {
     this.domain = domain
-    AccountSessionManager.getInstance().unauthenticatedApiController.submitRequest(this)
+    AccountSessionManager.instance.unauthenticatedApiController.submitRequest(this)
     return this
   }
 
   fun exec(domain: String, token: Token): MastodonAPIRequest<T> {
     this.domain = domain
     this.token = token
-    AccountSessionManager.getInstance().unauthenticatedApiController.submitRequest(this)
+    AccountSessionManager.instance.unauthenticatedApiController.submitRequest(this)
     return this
   }
 

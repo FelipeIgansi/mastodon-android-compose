@@ -94,7 +94,7 @@ public class HomeFragment extends AppKitFragment implements AssistContentProvide
 			notificationsFragment=new NotificationsListFragment();
 			notificationsFragment.setArguments(args);
 			args=new Bundle(args);
-			args.putParcelable("profileAccount", Parcels.wrap(AccountSessionManager.getInstance().getAccount(accountID).self));
+			args.putParcelable("profileAccount", Parcels.wrap(AccountSessionManager.instance.getAccount(accountID).self));
 			args.putBoolean("noAutoLoad", true);
 			profileFragment=new ProfileFragment();
 			profileFragment.setArguments(args);
@@ -127,7 +127,7 @@ public class HomeFragment extends AppKitFragment implements AssistContentProvide
 		tabBarAvatar=tabBar.findViewById(R.id.tab_profile_ava);
 		tabBarAvatar.setOutlineProvider(OutlineProviders.OVAL);
 		tabBarAvatar.setClipToOutline(true);
-		Account self=AccountSessionManager.getInstance().getAccount(accountID).self;
+		Account self= AccountSessionManager.instance.getAccount(accountID).self;
 		ViewImageLoader.loadWithoutAnimation(tabBarAvatar, null, new UrlImageLoaderRequest(self.avatar, V.dp(24), V.dp(24)));
 
 		notificationsBadge=tabBar.findViewById(R.id.notifications_badge);
@@ -262,7 +262,7 @@ public class HomeFragment extends AppKitFragment implements AssistContentProvide
 	private boolean onTabLongClick(@IdRes int tab){
 		if(tab==R.id.tab_profile){
 			ArrayList<String> options=new ArrayList<>();
-			for(AccountSession session:AccountSessionManager.getInstance().getLoggedInAccounts()){
+			for(AccountSession session: AccountSessionManager.instance.getLoggedInAccounts()){
 				options.add(session.self.displayName+"\n("+session.self.username+"@"+session.domain+")");
 			}
 			new AccountSwitcherSheet(getActivity(), this).show();

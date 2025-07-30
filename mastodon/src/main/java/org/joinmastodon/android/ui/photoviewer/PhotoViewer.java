@@ -598,7 +598,7 @@ public class PhotoViewer implements ZoomPanView.Listener{
 		favoriteBtn.setSelected(status.favourited);
 		bookmarkBtn.setSelected(status.bookmarked);
 		bookmarkBtn.setContentDescription(activity.getString(status.bookmarked ? R.string.remove_bookmark : R.string.add_bookmark));
-		boolean isOwn=status.account.id.equals(AccountSessionManager.getInstance().getAccount(accountID).self.id);
+		boolean isOwn=status.account.id.equals(AccountSessionManager.instance.getAccount(accountID).self.id);
 		boostBtn.setEnabled(status.visibility==StatusPrivacy.PUBLIC || status.visibility==StatusPrivacy.UNLISTED
 				|| (status.visibility==StatusPrivacy.PRIVATE && isOwn));
 		boostBtn.setAlpha(boostBtn.isEnabled() ? 1 : 0.5f);

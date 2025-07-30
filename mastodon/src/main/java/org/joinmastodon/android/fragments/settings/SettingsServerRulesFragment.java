@@ -23,7 +23,7 @@ public class SettingsServerRulesFragment extends MastodonRecyclerFragment<Instan
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		accountID=getArguments().getString("account");
-		Instance instance=AccountSessionManager.getInstance().getInstanceInfo(AccountSessionManager.get(accountID).domain);
+		Instance instance= AccountSessionManager.instance.getInstanceInfo(AccountSessionManager.get(accountID).domain);
 		onDataLoaded(instance.rules);
 		setRefreshEnabled(false);
 	}

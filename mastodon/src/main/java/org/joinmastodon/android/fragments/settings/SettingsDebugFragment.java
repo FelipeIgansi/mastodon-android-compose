@@ -2,13 +2,16 @@ package org.joinmastodon.android.fragments.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Pair;
 import android.view.ViewGroup;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.palette.graphics.Palette;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import org.joinmastodon.android.GlobalUserPreferences;
 import org.joinmastodon.android.R;
@@ -30,10 +33,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.palette.graphics.Palette;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import me.grishka.appkit.Nav;
 import me.grishka.appkit.utils.V;
 
@@ -78,7 +77,7 @@ public class SettingsDebugFragment extends BaseSettingsFragment<Void>{
 	}
 
 	private void onTestEmailConfirmClick(ListItem<?> item){
-		AccountSession sess=AccountSessionManager.getInstance().getAccount(accountID);
+		AccountSession sess= AccountSessionManager.instance.getAccount(accountID);
 		sess.activated=false;
 		sess.activationInfo=new AccountActivationInfo("test@email", System.currentTimeMillis());
 		Bundle args=new Bundle();
@@ -109,12 +108,12 @@ public class SettingsDebugFragment extends BaseSettingsFragment<Void>{
 	}
 
 	private void onClearDismissedCampaignsClick(ListItem<?> item){
-		AccountSessionManager.getInstance().clearDismissedDonationCampaigns();
+		AccountSessionManager.instance.clearDismissedDonationCampaigns();
 		Toast.makeText(getActivity(), "Dismissed campaigns cleared. Restart app to see your current campaign, if any", Toast.LENGTH_LONG).show();
 	}
 
 	private void onDeleteInstanceInfoClick(ListItem<?> item){
-		AccountSessionManager.getInstance().clearInstanceInfo();
+		AccountSessionManager.instance.clearInstanceInfo();
 		Toast.makeText(getActivity(), "Instances removed from database", Toast.LENGTH_LONG).show();
 	}
 

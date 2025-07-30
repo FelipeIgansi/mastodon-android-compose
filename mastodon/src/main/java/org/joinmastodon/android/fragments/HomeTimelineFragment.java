@@ -142,7 +142,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 						public void onSuccess(DonationCampaign result){
 							if(result==null)
 								return;
-							AccountSessionManager.getInstance().runIfDonationCampaignNotDismissed(result.id, ()->showDonationBanner(result));
+							AccountSessionManager.instance.runIfDonationCampaignNotDismissed(result.id, ()->showDonationBanner(result));
 						}
 
 						@Override
@@ -211,7 +211,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 	protected void doLoadData(int offset, int count){
 		switch(listMode){
 			case FOLLOWING -> {
-				AccountSessionManager.getInstance()
+				AccountSessionManager.instance
 						.getAccount(accountID).getCacheController()
 						.getHomeTimeline(offset>0 ? maxID : null, count, refreshing, new SimpleCallback<>(this){
 							@Override
@@ -467,7 +467,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 							prependItems(toAdd, true);
 							showNewPostsButton();
 							if(needCache)
-								AccountSessionManager.getInstance().getAccount(accountID).getCacheController().putHomeTimeline(toAdd, false);
+								AccountSessionManager.instance.getAccount(accountID).getCacheController().putHomeTimeline(toAdd, false);
 						}
 					}
 
@@ -517,7 +517,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 							if(gapStatus!=null){
 								gapStatus.hasGapAfter=false;
 								if(needCache)
-									AccountSessionManager.getInstance().getAccount(accountID).getCacheController().putHomeTimeline(List.of(gapStatus), false);
+									AccountSessionManager.instance.getAccount(accountID).getCacheController().putHomeTimeline(List.of(gapStatus), false);
 							}
 						}else if(insertBelowGap){
 							Set<String> idsBelowGap=new HashSet<>();
@@ -530,7 +530,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 									belowGap=true;
 									s.hasGapAfter=false;
 									if(needCache)
-										AccountSessionManager.getInstance().getAccount(accountID).getCacheController().putHomeTimeline(List.of(s), false);
+										AccountSessionManager.instance.getAccount(accountID).getCacheController().putHomeTimeline(List.of(s), false);
 								}else{
 									gapPostIndex++;
 								}
@@ -565,7 +565,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 								adapter.notifyItemRangeInserted(getMainAdapterOffset()+gapPos+1, targetList.size()-1);
 							}
 							if(needCache)
-								AccountSessionManager.getInstance().getAccount(accountID).getCacheController().putHomeTimeline(insertedPosts, false);
+								AccountSessionManager.instance.getAccount(accountID).getCacheController().putHomeTimeline(insertedPosts, false);
 						}else{
 							Set<String> idsAboveGap=new HashSet<>();
 							int gapPostIndex=0;
@@ -606,7 +606,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 								gapRemoved=true;
 								gapPost.hasGapAfter=false;
 								if(needCache)
-									AccountSessionManager.getInstance().getAccount(accountID).getCacheController().putHomeTimeline(List.of(gapPost), false);
+									AccountSessionManager.instance.getAccount(accountID).getCacheController().putHomeTimeline(List.of(gapPost), false);
 								displayItems.remove(gapPos);
 								adapter.notifyItemRemoved(getMainAdapterOffset()+gapPos);
 							}else{
@@ -615,7 +615,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 							}
 							if(!insertedPosts.isEmpty()){
 								if(needCache)
-									AccountSessionManager.getInstance().getAccount(accountID).getCacheController().putHomeTimeline(insertedPosts, false);
+									AccountSessionManager.instance.getAccount(accountID).getCacheController().putHomeTimeline(insertedPosts, false);
 								adapter.notifyItemRangeInserted(getMainAdapterOffset()+gapPos+(gapRemoved ? 0 : 1), addedItemCount);
 								if(needAdjustScroll){
 									((LinearLayoutManager)list.getLayoutManager()).scrollToPositionWithOffset(getMainAdapterOffset()+gapPos+(gapRemoved ? 0 : 1)+addedItemCount, scrollTop);
@@ -941,7 +941,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 			ViewStub stub=contentView.findViewById(R.id.donation_banner);
 			donationBanner=stub.inflate();
 			donationBanner.findViewById(R.id.banner_dismiss).setOnClickListener(v->{
-				AccountSessionManager.getInstance().markDonationCampaignAsDismissed(currentDonationCampaign.id);
+				AccountSessionManager.instance.markDonationCampaignAsDismissed(currentDonationCampaign.id);
 				dismissDonationBanner();
 			});
 			donationBanner.setOnClickListener(v->openDonationSheet());

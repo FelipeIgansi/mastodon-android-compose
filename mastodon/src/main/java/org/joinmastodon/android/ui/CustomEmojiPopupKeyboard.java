@@ -142,7 +142,7 @@ public class CustomEmojiPopupKeyboard extends PopupKeyboard{
 	@Subscribe
 	public void onEmojiUpdated(EmojiUpdatedEvent ev){
 		if(ev.instanceDomain.equals(domain)){
-			emojis=AccountSessionManager.getInstance().getCustomEmojis(domain);
+			emojis= AccountSessionManager.instance.getCustomEmojis(domain);
 			adapter.notifyDataSetChanged();
 		}
 	}

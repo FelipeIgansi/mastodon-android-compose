@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.UiModeManager;
-import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.Context;
@@ -53,6 +52,12 @@ import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.AttrRes;
+import androidx.annotation.StringRes;
+import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.RecyclerView;
 
 import org.joinmastodon.android.E;
 import org.joinmastodon.android.FileProvider;
@@ -106,11 +111,6 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import androidx.annotation.AttrRes;
-import androidx.annotation.StringRes;
-import androidx.browser.customtabs.CustomTabsIntent;
-import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.RecyclerView;
 import me.grishka.appkit.Nav;
 import me.grishka.appkit.api.Callback;
 import me.grishka.appkit.api.ErrorResponse;
@@ -571,7 +571,7 @@ public class UiUtils{
 					@Override
 					public void onSuccess(Status result){
 						resultCallback.accept(result);
-						AccountSessionManager.getInstance().getAccount(accountID).getCacheController().deleteStatus(status.id);
+						AccountSessionManager.instance.getAccount(accountID).getCacheController().deleteStatus(status.id);
 						E.post(new StatusDeletedEvent(status.id, accountID));
 					}
 
@@ -788,7 +788,7 @@ public class UiUtils{
 		Uri uri=Uri.parse(url);
 		if(accountID!=null && "https".equals(uri.getScheme()) && !Objects.equals(url, objectURL)){
 			List<String> path=uri.getPathSegments();
-			if(AccountSessionManager.getInstance().getAccount(accountID).domain.equalsIgnoreCase(uri.getAuthority()) && path.size()==2 && path.get(0).matches("^@[a-zA-Z0-9_]+$") && path.get(1).matches("^[0-9]+$")){
+			if(AccountSessionManager.instance.getAccount(accountID).domain.equalsIgnoreCase(uri.getAuthority()) && path.size()==2 && path.get(0).matches("^@[a-zA-Z0-9_]+$") && path.get(1).matches("^[0-9]+$")){
 				// Match URLs like https://mastodon.social/@Gargron/108132679274083591
 				new GetStatusByID(path.get(1))
 						.setCallback(new Callback<>(){
