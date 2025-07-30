@@ -9,7 +9,6 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.TemporalAccessor
-import java.time.temporal.TemporalQuery
 
 class IsoInstantTypeAdapter : TypeAdapter<Instant?>() {
   @Throws(IOException::class)
@@ -31,17 +30,15 @@ class IsoInstantTypeAdapter : TypeAdapter<Instant?>() {
     }
 
     return try {
-      DateTimeFormatter.ISO_INSTANT.parse<Instant?>(
-        nextString,
-        TemporalQuery { temporal: TemporalAccessor? -> Instant.from(temporal) }
-      )
+      DateTimeFormatter.ISO_INSTANT.parse(nextString) {
+        temporal: TemporalAccessor? -> Instant.from(temporal)
+      }
     } catch (x: DateTimeParseException) {
       try {
-        return DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse<Instant?>(
-          nextString,
-          TemporalQuery { temporal: TemporalAccessor? -> Instant.from(temporal) }
-        )
-      } catch (x: DateTimeParseException) {
+        return DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(
+          nextString
+        ) { temporal: TemporalAccessor? -> Instant.from(temporal) }
+      } catch (_: DateTimeParseException) {
         null
       }
     }

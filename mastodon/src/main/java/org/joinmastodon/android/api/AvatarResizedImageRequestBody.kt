@@ -10,7 +10,7 @@ class AvatarResizedImageRequestBody(
   progressListener: ProgressListener?
 ) : ResizedImageRequestBody(uri, 0, progressListener) {
 
-  override fun getTargetSize(srcWidth: Int, srcHeight: Int): IntArray? {
+  override fun getTargetSize(srcWidth: Int, srcHeight: Int): IntArray {
     val factor = 400f / min(srcWidth, srcHeight)
     return intArrayOf((srcWidth * factor).roundToInt(), (srcHeight * factor).roundToInt())
   }

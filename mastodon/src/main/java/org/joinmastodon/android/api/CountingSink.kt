@@ -24,7 +24,7 @@ internal class CountingSink(
             bytesWritten == length
         ) {
             lastCallbackTime = SystemClock.uptimeMillis()
-            UiUtils.runOnUiThread(Runnable { progressListener.onProgress(bytesWritten, length) })
+            UiUtils.runOnUiThread { progressListener.onProgress(bytesWritten, length) }
         }
     }
 }
