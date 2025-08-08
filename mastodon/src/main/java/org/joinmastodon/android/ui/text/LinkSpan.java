@@ -50,7 +50,7 @@ public class LinkSpan extends CharacterStyle {
 					if(parts.length==2){
 						domain=parts[1];
 					}else{
-						domain=AccountSessionManager.get(accountID).domain;
+						domain=AccountSessionManager.getID(accountID).domain;
 					}
 				}else{
 					username=domain=null;

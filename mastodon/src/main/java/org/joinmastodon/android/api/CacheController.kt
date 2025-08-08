@@ -1,625 +1,754 @@
-package org.joinmastodon.android.api;
+package org.joinmastodon.android.api
 
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
+import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
+import android.database.sqlite.SQLiteException
+import android.database.sqlite.SQLiteOpenHelper
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import com.google.gson.reflect.TypeToken
+import me.grishka.appkit.api.Callback
+import me.grishka.appkit.api.ErrorResponse
+import me.grishka.appkit.utils.WorkerThread
+import org.joinmastodon.android.BuildConfig
+import org.joinmastodon.android.MastodonApp
+import org.joinmastodon.android.api.requests.lists.GetLists
+import org.joinmastodon.android.api.requests.notifications.GetNotificationsV1
+import org.joinmastodon.android.api.requests.notifications.GetNotificationsV2
+import org.joinmastodon.android.api.requests.notifications.GetNotificationsV2.GroupedNotificationsResults
+import org.joinmastodon.android.api.requests.timelines.GetHomeTimeline
+import org.joinmastodon.android.api.session.AccountSessionManager.Companion.getID
+import org.joinmastodon.android.model.Account
+import org.joinmastodon.android.model.CacheablePaginatedResponse
+import org.joinmastodon.android.model.FilterContext
+import org.joinmastodon.android.model.FollowList
+import org.joinmastodon.android.model.Notification
+import org.joinmastodon.android.model.NotificationGroup
+import org.joinmastodon.android.model.NotificationType
+import org.joinmastodon.android.model.PaginatedResponse
+import org.joinmastodon.android.model.SearchResult
+import org.joinmastodon.android.model.Status
+import org.joinmastodon.android.model.viewmodel.NotificationViewModel
+import java.io.IOException
+import java.util.EnumSet
+import java.util.function.Consumer
 
-import com.google.gson.reflect.TypeToken;
 
-import org.joinmastodon.android.BuildConfig;
-import org.joinmastodon.android.MastodonApp;
-import org.joinmastodon.android.api.requests.lists.GetLists;
-import org.joinmastodon.android.api.requests.notifications.GetNotificationsV1;
-import org.joinmastodon.android.api.requests.notifications.GetNotificationsV2;
-import org.joinmastodon.android.api.requests.timelines.GetHomeTimeline;
-import org.joinmastodon.android.api.session.AccountSessionManager;
-import org.joinmastodon.android.model.Account;
-import org.joinmastodon.android.model.CacheablePaginatedResponse;
-import org.joinmastodon.android.model.FilterContext;
-import org.joinmastodon.android.model.FollowList;
-import org.joinmastodon.android.model.Notification;
-import org.joinmastodon.android.model.NotificationGroup;
-import org.joinmastodon.android.model.NotificationType;
-import org.joinmastodon.android.model.PaginatedResponse;
-import org.joinmastodon.android.model.SearchResult;
-import org.joinmastodon.android.model.Status;
-import org.joinmastodon.android.model.viewmodel.NotificationViewModel;
+class CacheController(private val accountID: String) {
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+  companion object {
+    private const val TIME = "time"
+    private const val FLAGS = "flags"
+    private const val HOME_TIMELINE = "home_timeline"
+    private const val MENTIONS = "mentions"
+    private const val ALL = "all"
+    private const val ID = "id"
+    private const val JSON = "json"
+    private const val TYPE = "type"
 
-import me.grishka.appkit.api.Callback;
-import me.grishka.appkit.api.ErrorResponse;
-import me.grishka.appkit.utils.WorkerThread;
 
-public class CacheController{
-	private static final String TAG="CacheController";
-	private static final int DB_VERSION=5;
-	public static final WorkerThread databaseThread=new WorkerThread("databaseThread");
-	public static final Handler uiHandler=new Handler(Looper.getMainLooper());
+    private const val TAG = "CacheController"
+    private const val DB_VERSION = 5
 
-	private final String accountID;
-	private DatabaseHelper db;
-	private final Runnable databaseCloseRunnable=this::closeDatabase;
-	private boolean loadingNotifications;
-	private final ArrayList<Callback<PaginatedResponse<List<NotificationViewModel>>>> pendingNotificationsCallbacks=new ArrayList<>();
-	private List<FollowList> lists;
+    val databaseThread: WorkerThread = WorkerThread("databaseThread")
+    val uiHandler: Handler = Handler(Looper.getMainLooper())
 
-	private static final int POST_FLAG_GAP_AFTER=1;
+    private const val POST_FLAG_GAP_AFTER = 1
 
-	static{
-		databaseThread.start();
-	}
+    init {
+      databaseThread.start()
+    }
+  }
 
-	public CacheController(String accountID){
-		this.accountID=accountID;
-	}
 
-	public void getHomeTimeline(String maxID, int count, boolean forceReload, Callback<CacheablePaginatedResponse<List<Status>>> callback){
-		cancelDelayedClose();
-		databaseThread.postRunnable(()->{
-			try{
-				if(!forceReload){
-					SQLiteDatabase db=getOrOpenDatabase();
-					try(Cursor cursor=db.query("home_timeline", new String[]{"json", "flags"}, maxID==null ? null : "`id`<?", maxID==null ? null : new String[]{maxID}, null, null, "`time` DESC", count+"")){
-						if(cursor.getCount()==count){
-							ArrayList<Status> result=new ArrayList<>();
-							cursor.moveToFirst();
-							String newMaxID;
-							do{
-								Status status=MastodonAPIController.gson.fromJson(cursor.getString(0), Status.class);
-								status.postprocess();
-								int flags=cursor.getInt(1);
-								status.hasGapAfter=((flags & POST_FLAG_GAP_AFTER)!=0);
-								newMaxID=status.id;
-								result.add(status);
-							}while(cursor.moveToNext());
-							String _newMaxID=newMaxID;
-							AccountSessionManager.get(accountID).filterStatuses(result, FilterContext.HOME);
-							uiHandler.post(()->callback.onSuccess(new CacheablePaginatedResponse<>(result, _newMaxID, true)));
-							return;
-						}
-					}catch(IOException x){
-						Log.w(TAG, "getHomeTimeline: corrupted status object in database", x);
-					}
-				}
-				new GetHomeTimeline(maxID, null, count, null)
-						.setCallback(new Callback<>(){
-							@Override
-							public void onSuccess(List<Status> result){
-								ArrayList<Status> filtered=new ArrayList<>(result);
-								AccountSessionManager.get(accountID).filterStatuses(filtered, FilterContext.HOME);
-								callback.onSuccess(new CacheablePaginatedResponse<>(filtered, result.isEmpty() ? null : result.get(result.size()-1).id, false));
-								putHomeTimeline(result, maxID==null);
-							}
+  private var db: DatabaseHelper? = null
+  private val databaseCloseRunnable = Runnable { this.closeDatabase() }
+  private var loadingNotifications = false
+  private val pendingNotificationsCallbacks =
+    ArrayList<Callback<PaginatedResponse<MutableList<NotificationViewModel>>>>()
+  private var lists: MutableList<FollowList> = mutableListOf()
 
-							@Override
-							public void onError(ErrorResponse error){
-								callback.onError(error);
-							}
-						})
-						.exec(accountID);
-			}catch(SQLiteException x){
-				Log.w(TAG, x);
-				uiHandler.post(()->callback.onError(new MastodonErrorResponse(x.getLocalizedMessage(), 500, x)));
-			}finally{
-				closeDelayed();
-			}
-		}, 0);
-	}
+  fun getHomeTimeline(
+    maxID: String?,
+    count: Int,
+    forceReload: Boolean,
+    callback: Callback<CacheablePaginatedResponse<MutableList<Status>>>
+  ) {
+    cancelDelayedClose()
+    databaseThread.postRunnable({
+      try {
+        if (!forceReload) {
+          val base = getOrOpenDatabase()
+          try {
+            base.query(
+              HOME_TIMELINE,
+              arrayOf(JSON, FLAGS),
+              maxID?.let { "`id`<?" },
+              maxID?.let { arrayOf(maxID) },
+              null,
+              null,
+              "`time` DESC",
+              count.toString()
+            ).use { cursor ->
+              if (cursor.count == count) {
+                val result = arrayListOf<Status>()
+                cursor.moveToFirst()
+                var newMaxID: String?
+                do {
+                  val status = MastodonAPIController.gson.fromJson(
+                    cursor.getString(0),
+                    Status::class.java
+                  )
+                  status.postprocess()
+                  val flags = cursor.getInt(1)
+                  status.hasGapAfter = ((flags and POST_FLAG_GAP_AFTER) != 0)
+                  newMaxID = status.id
+                  result.add(status)
+                } while (cursor.moveToNext())
+                getID(accountID).filterStatuses(result, FilterContext.HOME)
+                uiHandler.post {
+                  callback.onSuccess(
+                    CacheablePaginatedResponse<MutableList<Status>>(
+                      result,
+                      newMaxID,
+                      true
+                    )
+                  )
+                }
+                return@postRunnable
+              }
+            }
+          } catch (exception: IOException) {
+            Log.w(TAG, "getHomeTimeline: corrupted status object in database", exception)
+          }
+        }
+        GetHomeTimeline(maxID, null, count, null)
+          .setCallback(object : Callback<MutableList<Status>> {
+            override fun onSuccess(result: MutableList<Status>) {
+              val filtered = ArrayList<Status>(result)
+              getID(accountID).filterStatuses(filtered, FilterContext.HOME)
+              callback.onSuccess(
+                CacheablePaginatedResponse<MutableList<Status>>(
+                  filtered,
+                  result.lastOrNull()?.id,
+                  false
+                )
+              )
+              putHomeTimeline(result, maxID == null)
+            }
 
-	public void putHomeTimeline(List<Status> posts, boolean clear){
-		runOnDbThread((db)->{
-			if(clear)
-				db.delete("home_timeline", null, null);
-			ContentValues values=new ContentValues(4);
-			for(Status s:posts){
-				values.put("id", s.id);
-				values.put("json", MastodonAPIController.gson.toJson(s));
-				int flags=0;
-				if(s.hasGapAfter)
-					flags|=POST_FLAG_GAP_AFTER;
-				values.put("flags", flags);
-				values.put("time", s.createdAt.getEpochSecond());
-				db.insertWithOnConflict("home_timeline", null, values, SQLiteDatabase.CONFLICT_REPLACE);
-			}
-		});
-	}
+            override fun onError(error: ErrorResponse) {
+              callback.onError(error)
+            }
+          })
+          .exec(accountID)
+      } catch (exception: SQLiteException) {
+        Log.w(TAG, exception)
+        uiHandler.post {
+          callback.onError(
+            MastodonErrorResponse(exception.localizedMessage, 500, exception)
+          )
+        }
+      } finally {
+        closeDelayed()
+      }
+    }, 0)
+  }
 
-	private List<NotificationViewModel> makeNotificationViewModels(List<NotificationGroup> notifications, Map<String, Account> accounts, Map<String, Status> statuses){
-		return notifications.stream()
-				.filter(ng->ng.type!=null)
-				.map(ng->{
-					NotificationViewModel nvm=new NotificationViewModel();
-					nvm.notification=ng;
-					nvm.accounts=ng.sampleAccountIds.stream().map(accounts::get).filter(Objects::nonNull).collect(Collectors.toList());
-					if(nvm.accounts.size()!=ng.sampleAccountIds.size())
-						return null;
-					if(ng.statusId!=null){
-						nvm.status=statuses.get(ng.statusId);
-						if(nvm.status==null)
-							return null;
-					}
-					return nvm;
-				})
-				.filter(Objects::nonNull)
-				.collect(Collectors.toList());
-	}
+  fun putHomeTimeline(posts: List<Status>, clear: Boolean) {
+    runOnDbThread { db ->
+      if (clear) db.delete(HOME_TIMELINE, null, null)
+      val values = ContentValues(4)
+      posts.forEach { status ->
+        values.run {
+          put(ID, status.id)
+          put(JSON, MastodonAPIController.gson.toJson(status))
+          var flags = 0
+          if (status.hasGapAfter) flags = flags or POST_FLAG_GAP_AFTER
+          put(FLAGS, flags)
+          put(TIME, status.createdAt.epochSecond)
+          db.insertWithOnConflict(HOME_TIMELINE, null, this, CONFLICT_REPLACE)
+        }
+      }
+    }
+  }
 
-	public void getNotifications(String maxID, int count, boolean onlyMentions, boolean forceReload, Callback<PaginatedResponse<List<NotificationViewModel>>> callback){
-		cancelDelayedClose();
-		databaseThread.postRunnable(()->{
-			try{
-				if(!forceReload){
-					SQLiteDatabase db=getOrOpenDatabase();
-					String suffix=onlyMentions ? "mentions" : "all";
-					String table="notifications_"+suffix;
-					String accountsTable="notifications_accounts_"+suffix;
-					String statusesTable="notifications_statuses_"+suffix;
-					try(Cursor cursor=db.query(table, new String[]{"json"}, maxID==null ? null : "`max_id`<?", maxID==null ? null : new String[]{maxID}, null, null, "`time` DESC", count+"")){
-						if(cursor.getCount()==count){
-							ArrayList<NotificationGroup> result=new ArrayList<>();
-							cursor.moveToFirst();
-							String newMaxID;
-							HashSet<String> needAccounts=new HashSet<>(), needStatuses=new HashSet<>();
-							do{
-								NotificationGroup ntf=MastodonAPIController.gson.fromJson(cursor.getString(0), NotificationGroup.class);
-								ntf.postprocess();
-								newMaxID=ntf.pageMinId;
-								needAccounts.addAll(ntf.sampleAccountIds);
-								if(ntf.statusId!=null)
-									needStatuses.add(ntf.statusId);
-								result.add(ntf);
-							}while(cursor.moveToNext());
-							String _newMaxID=newMaxID;
-							HashMap<String, Account> accounts=new HashMap<>();
-							HashMap<String, Status> statuses=new HashMap<>();
-							if(!needAccounts.isEmpty()){
-								try(Cursor cursor2=db.query(accountsTable, new String[]{"json"}, "`id` IN ("+String.join(", ", Collections.nCopies(needAccounts.size(), "?"))+")",
-										needAccounts.toArray(new String[0]), null, null, null)){
-									while(cursor2.moveToNext()){
-										Account acc=MastodonAPIController.gson.fromJson(cursor2.getString(0), Account.class);
-										acc.postprocess();
-										accounts.put(acc.id, acc);
-									}
-								}
-							}
-							if(!needStatuses.isEmpty()){
-								try(Cursor cursor2=db.query(statusesTable, new String[]{"json"}, "`id` IN ("+String.join(", ", Collections.nCopies(needStatuses.size(), "?"))+")",
-										needStatuses.toArray(new String[0]), null, null, null)){
-									while(cursor2.moveToNext()){
-										Status s=MastodonAPIController.gson.fromJson(cursor2.getString(0), Status.class);
-										s.postprocess();
-										statuses.put(s.id, s);
-									}
-								}
-							}
-							uiHandler.post(()->callback.onSuccess(new PaginatedResponse<>(makeNotificationViewModels(result, accounts, statuses), _newMaxID)));
-							return;
-						}
-					}catch(IOException x){
-						Log.w(TAG, "getNotifications: corrupted notification object in database", x);
-					}
-				}
+  private fun makeNotificationViewModels(
+    notifications: List<NotificationGroup>,
+    accounts: Map<String, Account>,
+    statuses: Map<String, Status>
+  ): MutableList<NotificationViewModel> {
 
-				if(!onlyMentions && loadingNotifications){
-					synchronized(pendingNotificationsCallbacks){
-						pendingNotificationsCallbacks.add(callback);
-					}
-					return;
-				}
-				if(!onlyMentions)
-					loadingNotifications=true;
-				if(AccountSessionManager.get(accountID).getInstanceInfo().getApiVersion()>=2){
-					new GetNotificationsV2(maxID, count, onlyMentions ? EnumSet.of(NotificationType.MENTION): EnumSet.allOf(NotificationType.class), NotificationType.getGroupableTypes())
-							.setCallback(new Callback<>(){
-								@Override
-								public void onSuccess(GetNotificationsV2.GroupedNotificationsResults result){
-									Map<String, Account> accounts=result.accounts.stream().collect(Collectors.toMap(a->a.id, Function.identity(), (a1, a2)->a2));
-									Map<String, Status> statuses=result.statuses.stream().collect(Collectors.toMap(s->s.id, Function.identity(), (s1, s2)->s2));
-									List<NotificationViewModel> notifications=makeNotificationViewModels(result.notificationGroups, accounts, statuses);
-									databaseThread.postRunnable(()->putNotifications(result.notificationGroups, result.accounts, result.statuses, onlyMentions, maxID==null), 0);
-									PaginatedResponse<List<NotificationViewModel>> res=new PaginatedResponse<>(notifications,
-											result.notificationGroups.isEmpty() ? null : result.notificationGroups.get(result.notificationGroups.size()-1).pageMinId);
-									callback.onSuccess(res);
-									if(!onlyMentions){
-										loadingNotifications=false;
-										synchronized(pendingNotificationsCallbacks){
-											for(Callback<PaginatedResponse<List<NotificationViewModel>>> cb:pendingNotificationsCallbacks){
-												cb.onSuccess(res);
-											}
-											pendingNotificationsCallbacks.clear();
-										}
-									}
-								}
+    return notifications.mapNotNull { ng ->
+      if (ng.type == null) return@mapNotNull null
 
-								@Override
-								public void onError(ErrorResponse error){
-									callback.onError(error);
-									if(!onlyMentions){
-										loadingNotifications=false;
-										synchronized(pendingNotificationsCallbacks){
-											for(Callback<PaginatedResponse<List<NotificationViewModel>>> cb:pendingNotificationsCallbacks){
-												cb.onError(error);
-											}
-											pendingNotificationsCallbacks.clear();
-										}
-									}
-								}
-							})
-							.exec(accountID);
-				}else{
-					new GetNotificationsV1(maxID, count, onlyMentions ? EnumSet.of(NotificationType.MENTION): EnumSet.allOf(NotificationType.class))
-							.setCallback(new Callback<>(){
-								@Override
-								public void onSuccess(List<Notification> result){
-									ArrayList<Notification> filtered=new ArrayList<>(result);
-									AccountSessionManager.get(accountID).filterStatusContainingObjects(filtered, n->n.status, FilterContext.NOTIFICATIONS);
-									List<Status> statuses=filtered.stream().map(n->n.status).filter(Objects::nonNull).collect(Collectors.toList());
-									List<Account> accounts=filtered.stream().map(n->n.account).collect(Collectors.toList());
-									List<NotificationViewModel> converted=filtered.stream()
-											.map(n->{
-												NotificationGroup group=new NotificationGroup();
-												group.groupKey="converted-"+n.id;
-												group.notificationsCount=1;
-												group.type=n.type;
-												group.mostRecentNotificationId=group.pageMaxId=group.pageMinId=n.id;
-												group.latestPageNotificationAt=n.createdAt;
-												group.sampleAccountIds=List.of(n.account.id);
-												group.event=n.event;
-												group.moderationWarning=n.moderationWarning;
-												if(n.status!=null)
-													group.statusId=n.status.id;
-												NotificationViewModel nvm=new NotificationViewModel();
-												nvm.notification=group;
-												nvm.status=n.status;
-												nvm.accounts=List.of(n.account);
-												return nvm;
-											})
-											.collect(Collectors.toList());
-									PaginatedResponse<List<NotificationViewModel>> res=new PaginatedResponse<>(converted, result.isEmpty() ? null : result.get(result.size()-1).id);
-									callback.onSuccess(res);
-									if(!onlyMentions){
-										loadingNotifications=false;
-										synchronized(pendingNotificationsCallbacks){
-											for(Callback<PaginatedResponse<List<NotificationViewModel>>> cb:pendingNotificationsCallbacks){
-												cb.onSuccess(res);
-											}
-											pendingNotificationsCallbacks.clear();
-										}
-									}
-									databaseThread.postRunnable(()->putNotifications(converted.stream().map(nvm->nvm.notification).collect(Collectors.toList()), accounts, statuses, onlyMentions, maxID==null), 0);
-								}
+      val accountList = ng.sampleAccountIds.mapNotNull { accounts[it] }
+      if (accountList.size != ng.sampleAccountIds.size) return@mapNotNull null
 
-								@Override
-								public void onError(ErrorResponse error){
-									callback.onError(error);
-									if(!onlyMentions){
-										loadingNotifications=false;
-										synchronized(pendingNotificationsCallbacks){
-											for(Callback<PaginatedResponse<List<NotificationViewModel>>> cb:pendingNotificationsCallbacks){
-												cb.onError(error);
-											}
-											pendingNotificationsCallbacks.clear();
-										}
-									}
-								}
-							})
-							.exec(accountID);
-				}
-			}catch(SQLiteException x){
-				Log.w(TAG, x);
-				uiHandler.post(()->callback.onError(new MastodonErrorResponse(x.getLocalizedMessage(), 500, x)));
-			}finally{
-				closeDelayed();
-			}
-		}, 0);
-	}
+      val status = ng.statusId?.let { statuses[it] }
+      if (ng.statusId != null && status == null) return@mapNotNull null
 
-	private void putNotifications(List<NotificationGroup> notifications, List<Account> accounts, List<Status> statuses, boolean onlyMentions, boolean clear){
-		runOnDbThread((db)->{
-			String suffix=onlyMentions ? "mentions" : "all";
-			String table="notifications_"+suffix;
-			String accountsTable="notifications_accounts_"+suffix;
-			String statusesTable="notifications_statuses_"+suffix;
-			if(clear){
-				db.delete(table, null, null);
-				db.delete(accountsTable, null, null);
-				db.delete(statusesTable, null, null);
-			}
-			ContentValues values=new ContentValues(4);
-			for(NotificationGroup n:notifications){
-				if(n.type==null){
-					continue;
-				}
-				values.put("id", n.groupKey);
-				values.put("json", MastodonAPIController.gson.toJson(n));
-				values.put("type", n.type.ordinal());
-				values.put("time", n.latestPageNotificationAt.getEpochSecond());
-				values.put("max_id", n.pageMaxId);
-				db.insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE);
-			}
-			values.clear();
-			for(Account acc:accounts){
-				values.put("id", acc.id);
-				values.put("json", MastodonAPIController.gson.toJson(acc));
-				db.insertWithOnConflict(accountsTable, null, values, SQLiteDatabase.CONFLICT_REPLACE);
-			}
-			for(Status s:statuses){
-				values.put("id", s.id);
-				values.put("json", MastodonAPIController.gson.toJson(s));
-				db.insertWithOnConflict(statusesTable, null, values, SQLiteDatabase.CONFLICT_REPLACE);
-			}
-		});
-	}
+      NotificationViewModel().apply {
+        this.notification = ng
+        this.accounts = accountList
+        this.status = status
+      }
+    }.toMutableList()
+  }
 
-	public void getRecentSearches(Consumer<List<SearchResult>> callback){
-		runOnDbThread((db)->{
-			try(Cursor cursor=db.query("recent_searches", new String[]{"json"}, null, null, null, null, "time DESC")){
-				List<SearchResult> results=new ArrayList<>();
-				while(cursor.moveToNext()){
-					SearchResult result=MastodonAPIController.gson.fromJson(cursor.getString(0), SearchResult.class);
-					result.postprocess();
-					results.add(result);
-				}
-				uiHandler.post(()->callback.accept(results));
-			}
-		});
-	}
+  fun getNotifications(
+    maxID: String?,
+    count: Int,
+    onlyMentions: Boolean,
+    forceReload: Boolean,
+    callback: Callback<PaginatedResponse<MutableList<NotificationViewModel>>>
+  ) {
+    cancelDelayedClose()
+    databaseThread.postRunnable({
+      try {
+        if (!forceReload) {
+          val db = getOrOpenDatabase()
+          val suffix = if (onlyMentions) MENTIONS else ALL
+          val table = "notifications_$suffix"
+          val accountsTable = "notifications_accounts_$suffix"
+          val statusesTable = "notifications_statuses_$suffix"
+          try {
+            db.query(
+              table,
+              arrayOf(JSON),
+              maxID?.let { "`max_id`<?" },
+              maxID?.let { arrayOf(maxID) },
+              null,
+              null,
+              "`time` DESC",
+              count.toString()
+            ).use { cursor ->
+              if (cursor.count == count) {
+                val result = arrayListOf<NotificationGroup>()
+                cursor.moveToFirst()
+                var newMaxID: String?
+                val needAccounts = mutableSetOf<String>()
+                val needStatuses = mutableSetOf<String>()
+                do {
+                  val ntf = MastodonAPIController.gson.fromJson(
+                    cursor.getString(0),
+                    NotificationGroup::class.java
+                  ) ?: NotificationGroup()
 
-	public void putRecentSearch(SearchResult result){
-		runOnDbThread((db)->{
-			ContentValues values=new ContentValues(4);
-			values.put("id", result.getID());
-			values.put("json", MastodonAPIController.gson.toJson(result));
-			values.put("time", (int)(System.currentTimeMillis()/1000));
-			db.insertWithOnConflict("recent_searches", null, values, SQLiteDatabase.CONFLICT_REPLACE);
-		});
-	}
+                  ntf.postprocess()
+                  newMaxID = ntf.pageMinId
+                  needAccounts.addAll(ntf.sampleAccountIds)
+                  if (ntf.statusId != null) needStatuses.add(ntf.statusId)
+                  result.add(ntf)
+                } while (cursor.moveToNext())
+                val currentMaxID = newMaxID
+                val accounts = HashMap<String, Account>()
+                val statuses = HashMap<String, Status>()
+                if (needAccounts.isNotEmpty()) {
+                  db.query(
+                    accountsTable,
+                    arrayOf(JSON),
+                    "`id` IN (${listOf(needAccounts.size, "?").joinToString(", ")})",
+                    needAccounts.toTypedArray(),
+                    null,
+                    null,
+                    null
+                  ).use { cursor2 ->
+                    while (cursor2.moveToNext()) {
+                      val account = MastodonAPIController.gson.fromJson(
+                        cursor2.getString(0),
+                        Account::class.java
+                      ) ?: Account()
 
-	public void deleteStatus(String id){
-		runOnDbThread((db)->{
-			db.delete("home_timeline", "`id`=?", new String[]{id});
-		});
-	}
+                      account.postprocess()
+                      accounts.put(account.id, account)
+                    }
+                  }
+                }
+                if (needStatuses.isNotEmpty()) {
+                  db.query(
+                    statusesTable,
+                    arrayOf(JSON),
+                    "`id` IN (${listOf(needStatuses.size, "?").joinToString(", ")})",
+                    needStatuses.toTypedArray(),
+                    null,
+                    null,
+                    null
+                  ).use { cursor2 ->
+                    while (cursor2.moveToNext()) {
+                      val s = MastodonAPIController.gson.fromJson(
+                        cursor2.getString(0),
+                        Status::class.java
+                      )
+                      s.postprocess()
+                      statuses.put(s.id, s)
+                    }
+                  }
+                }
+                uiHandler.post {
+                  callback.onSuccess(
+                    PaginatedResponse<MutableList<NotificationViewModel>>(
+                      makeNotificationViewModels(result, accounts, statuses),
+                      currentMaxID
+                    )
+                  )
+                }
+                return@postRunnable
+              }
+            }
+          } catch (exception: IOException) {
+            Log.w(TAG, "getNotifications: corrupted notification object in database", exception)
+          }
+        }
 
-	public void clearRecentSearches(){
-		runOnDbThread((db)->db.delete("recent_searches", null, null));
-	}
+        if (!onlyMentions && loadingNotifications) {
+          synchronized(pendingNotificationsCallbacks) {
+            pendingNotificationsCallbacks.add(callback)
+          }
+          return@postRunnable
+        }
+        if (!onlyMentions) loadingNotifications = true
+        val instanceInfo = getID(accountID).instanceInfo
+        if ((instanceInfo?.apiVersion ?: 0) >= 2) {
+          GetNotificationsV2(
+            maxID,
+            count,
+            when (onlyMentions) {
+              true -> EnumSet.of(NotificationType.MENTION)
+              else -> EnumSet.allOf(NotificationType::class.java)
+            }, NotificationType.getGroupableTypes()
+          ).setCallback(object : Callback<GroupedNotificationsResults> {
+            override fun onSuccess(result: GroupedNotificationsResults) {
+              val accounts = result.accounts.associateBy { it.id }
+              val statuses = result.statuses.associateBy { it.id }
+              val notifications = makeNotificationViewModels(
+                result.notificationGroups, accounts, statuses
+              )
+              databaseThread.postRunnable({
+                putNotifications(
+                  result.notificationGroups,
+                  result.accounts,
+                  result.statuses,
+                  onlyMentions,
+                  maxID == null
+                )
+              }, 0)
+              val res = PaginatedResponse(
+                notifications,
+                result.notificationGroups.lastOrNull()?.pageMinId
+              )
+              callback.onSuccess(res)
+              if (!onlyMentions) {
+                loadingNotifications = false
+                synchronized(pendingNotificationsCallbacks) {
+                  pendingNotificationsCallbacks.forEach { it.onSuccess(res) }
+                  pendingNotificationsCallbacks.clear()
+                }
+              }
+            }
 
-	private void closeDelayed(){
-		databaseThread.postRunnable(databaseCloseRunnable, 10_000);
-	}
+            override fun onError(error: ErrorResponse) {
+              callback.onError(error)
+              if (!onlyMentions) {
+                loadingNotifications = false
+                synchronized(pendingNotificationsCallbacks) {
+                  pendingNotificationsCallbacks.forEach { it.onError(error) }
+                  pendingNotificationsCallbacks.clear()
+                }
+              }
+            }
+          }).exec(accountID)
+        } else {
+          GetNotificationsV1(
+            maxID,
+            count,
+            when (onlyMentions) {
+              true -> EnumSet.of(NotificationType.MENTION)
+              else -> EnumSet.allOf(NotificationType::class.java)
+            }
+          ).setCallback(object : Callback<MutableList<Notification>> {
+            override fun onSuccess(result: MutableList<Notification>) {
+              val filtered = ArrayList<Notification>(result)
+              getID(accountID).filterStatusContainingObjects(
+                filtered, { notification -> notification.status }, FilterContext.NOTIFICATIONS
+              )
 
-	public void closeDatabase(){
-		if(db!=null){
-			if(BuildConfig.DEBUG)
-				Log.d(TAG, "closeDatabase");
-			db.close();
-			db=null;
-		}
-	}
+              val statuses = result.mapNotNull { it.status }
+              val accounts = result.mapNotNull { it.account }
 
-	private void cancelDelayedClose(){
-		if(db!=null){
-			databaseThread.handler.removeCallbacks(databaseCloseRunnable);
-		}
-	}
+              val converted = filtered.map { notification ->
+                val group = NotificationGroup().apply {
+                  groupKey = "converted-${notification.id}"
+                  notificationsCount = 1
+                  type = notification.type
+                  pageMinId = notification.id
+                  pageMaxId = notification.id
+                  mostRecentNotificationId = notification.id
+                  latestPageNotificationAt = notification.createdAt
+                  sampleAccountIds = listOf(notification.account?.id)
+                  event = notification.event
+                  moderationWarning = notification.moderationWarning
+                  statusId = notification.status?.id
+                }
 
-	private SQLiteDatabase getOrOpenDatabase(){
-		if(db==null)
-			db=new DatabaseHelper();
-		return db.getWritableDatabase();
-	}
+                NotificationViewModel().apply {
+                  this.notification = group
+                  this.status = notification.status
+                  this.accounts = listOf(notification.account)
+                }
+              }.toMutableList()
+              val res = PaginatedResponse(
+                converted,
+                result.lastOrNull()?.id
+              )
+              callback.onSuccess(res)
+              if (!onlyMentions) {
+                loadingNotifications = false
+                synchronized(pendingNotificationsCallbacks) {
+                  pendingNotificationsCallbacks.forEach { it.onSuccess(res) }
+                  pendingNotificationsCallbacks.clear()
+                }
+              }
+              databaseThread.postRunnable({
+                putNotifications(
+                  converted.mapNotNull { it.notification },
+                  accounts,
+                  statuses,
+                  onlyMentions,
+                  maxID == null
+                )
+              }, 0)
+            }
 
-	private void runOnDbThread(DatabaseRunnable r){
-		runOnDbThread(r, null);
-	}
+            override fun onError(error: ErrorResponse?) {
+              callback.onError(error)
+              if (!onlyMentions) {
+                loadingNotifications = false
+                synchronized(pendingNotificationsCallbacks) {
+                  pendingNotificationsCallbacks.forEach { it.onError(error) }
+                  pendingNotificationsCallbacks.clear()
+                }
+              }
+            }
+          }).exec(accountID)
+        }
+      } catch (e: SQLiteException) {
+        Log.w(TAG, e)
+        uiHandler.post {
+          callback.onError(
+            MastodonErrorResponse(e.localizedMessage, 500, e)
+          )
+        }
+      } finally {
+        closeDelayed()
+      }
+    }, 0)
+  }
 
-	private void runOnDbThread(DatabaseRunnable r, Consumer<Exception> onError){
-		cancelDelayedClose();
-		databaseThread.postRunnable(()->{
-			try{
-				SQLiteDatabase db=getOrOpenDatabase();
-				r.run(db);
-			}catch(SQLiteException|IOException x){
-				Log.w(TAG, x);
-				if(onError!=null)
-					onError.accept(x);
-			}finally{
-				closeDelayed();
-			}
-		}, 0);
-	}
+  private fun putNotifications(
+    notifications: List<NotificationGroup>,
+    accounts: List<Account>,
+    statuses: List<Status>,
+    onlyMentions: Boolean,
+    clear: Boolean
+  ) {
+    runOnDbThread { base ->
+      val suffix = if (onlyMentions) MENTIONS else ALL
+      val table = "notifications_$suffix"
+      val accountsTable = "notifications_accounts_$suffix"
+      val statusesTable = "notifications_statuses_$suffix"
+      if (clear) {
+        base.delete(table, null, null)
+        base.delete(accountsTable, null, null)
+        base.delete(statusesTable, null, null)
+      }
+      ContentValues(4).run {
+        notifications.forEach { ng ->
+          if (ng.type == null) {
+            return@forEach
+          }
+          put(ID, ng.groupKey)
+          put(JSON, MastodonAPIController.gson.toJson(ng))
+          put(TYPE, ng.type.ordinal)
+          put(TIME, ng.latestPageNotificationAt.epochSecond)
+          put("max_id", ng.pageMaxId)
+          base.insertWithOnConflict(table, null, this, CONFLICT_REPLACE)
+        }
+        clear()
+        accounts.forEach { account ->
+          put(ID, account.id)
+          put(JSON, MastodonAPIController.gson.toJson(account))
+          base.insertWithOnConflict(accountsTable, null, this, CONFLICT_REPLACE)
+        }
+        statuses.forEach { status ->
+          put(ID, status.id)
+          put(JSON, MastodonAPIController.gson.toJson(status))
+          base.insertWithOnConflict(statusesTable, null, this, CONFLICT_REPLACE)
+        }
+      }
 
-	public void reloadLists(Callback<List<FollowList>> callback){
-		new GetLists()
-				.setCallback(new Callback<>(){
-					@Override
-					public void onSuccess(List<FollowList> result){
-						result.sort(Comparator.comparing(l->l.title));
-						lists=result;
-						if(callback!=null)
-							callback.onSuccess(result);
-						writeLists();
-					}
+    }
+  }
 
-					@Override
-					public void onError(ErrorResponse error){
-						if(callback!=null)
-							callback.onError(error);
-					}
-				})
-				.exec(accountID);
-	}
+  fun getRecentSearches(callback: Consumer<MutableList<SearchResult>>) {
+    runOnDbThread { base ->
+      base.query(
+        "recent_searches",
+        arrayOf(JSON),
+        null,
+        null,
+        null,
+        null,
+        "time DESC"
+      ).use { cursor ->
+        val results: MutableList<SearchResult> = ArrayList()
+        while (cursor.moveToNext()) {
+          val result = MastodonAPIController.gson.fromJson(
+            cursor.getString(0),
+            SearchResult::class.java
+          )
+          result.postprocess()
+          results.add(result)
+        }
+        uiHandler.post { callback.accept(results) }
+      }
+    }
+  }
 
-	private List<FollowList> loadLists(){
-		SQLiteDatabase db=getOrOpenDatabase();
-		try(Cursor cursor=db.query("misc", new String[]{"value"}, "`key`=?", new String[]{"lists"}, null, null, null)){
-			if(!cursor.moveToFirst())
-				return null;
-			return MastodonAPIController.gson.fromJson(cursor.getString(0), new TypeToken<List<FollowList>>(){}.getType());
-		}
-	}
+  fun putRecentSearch(result: SearchResult) {
+    runOnDbThread { base ->
+      ContentValues(4).run {
+        put(ID, result.getID())
+        put(JSON, MastodonAPIController.gson.toJson(result))
+        put(TIME, (System.currentTimeMillis() / 1000).toInt())
+        base.insertWithOnConflict("recent_searches", null, this, CONFLICT_REPLACE)
+      }
+    }
+  }
 
-	private void writeLists(){
-		runOnDbThread(db->{
-			ContentValues values=new ContentValues();
-			values.put("key", "lists");
-			values.put("value", MastodonAPIController.gson.toJson(lists));
-			db.insertWithOnConflict("misc", null, values, SQLiteDatabase.CONFLICT_REPLACE);
-		});
-	}
+  fun deleteStatus(id: String) {
+    runOnDbThread { it.delete(HOME_TIMELINE, "`id`=?", arrayOf(id)) }
+  }
 
-	public void getLists(Callback<List<FollowList>> callback){
-		if(lists!=null){
-			if(callback!=null)
-				callback.onSuccess(lists);
-			return;
-		}
-		databaseThread.postRunnable(()->{
-			List<FollowList> lists=loadLists();
-			if(lists!=null){
-				this.lists=lists;
-				if(callback!=null)
-					uiHandler.post(()->callback.onSuccess(lists));
-				return;
-			}
-			reloadLists(callback);
-		}, 0);
-	}
+  fun clearRecentSearches() {
+    runOnDbThread { it.delete("recent_searches", null, null) }
+  }
 
-	public void addList(FollowList list){
-		if(lists==null)
-			return;
-		lists.add(list);
-		lists.sort(Comparator.comparing(l->l.title));
-		writeLists();
-	}
+  private fun closeDelayed() {
+    databaseThread.postRunnable(databaseCloseRunnable, 10000)
+  }
 
-	public void deleteList(String id){
-		if(lists==null)
-			return;
-		lists.removeIf(l->l.id.equals(id));
-		writeLists();
-	}
+  fun closeDatabase() {
+    if (db != null) {
+      if (BuildConfig.DEBUG) Log.d(TAG, "closeDatabase")
+      db?.close()
+      db = null
+    }
+  }
 
-	public void updateList(FollowList list){
-		if(lists==null)
-			return;
-		for(int i=0;i<lists.size();i++){
-			if(lists.get(i).id.equals(list.id)){
-				lists.set(i, list);
-				lists.sort(Comparator.comparing(l->l.title));
-				writeLists();
-				break;
-			}
-		}
-	}
+  private fun cancelDelayedClose() {
+    if (db != null) {
+      databaseThread.handler.removeCallbacks(databaseCloseRunnable)
+    }
+  }
 
-	private class DatabaseHelper extends SQLiteOpenHelper{
+  private fun getOrOpenDatabase(): SQLiteDatabase {
+    return db?.writableDatabase ?: DatabaseHelper().writableDatabase
+  }
 
-		public DatabaseHelper(){
-			super(MastodonApp.context, accountID+".db", null, DB_VERSION);
-		}
+  fun runOnDbThread(runnable: DatabaseRunnable) {
+    runOnDbThread(runnable, null)
+  }
 
-		@Override
-		public void onCreate(SQLiteDatabase db){
-			db.execSQL("""
+  private fun runOnDbThread(runnable: DatabaseRunnable, onError: Consumer<Exception>?) {
+    cancelDelayedClose()
+    databaseThread.postRunnable({
+      try {
+        val base = getOrOpenDatabase()
+        runnable.run(base)
+      } catch (exception: Exception) {
+        when (exception) {
+          is SQLiteException,
+          is IOException -> Log.w(TAG, exception)
+        }
+        onError?.accept(exception)
+      } finally {
+        closeDelayed()
+      }
+    }, 0)
+  }
+
+  fun reloadLists(callback: Callback<MutableList<FollowList>>) {
+    GetLists()
+      .setCallback(object : Callback<MutableList<FollowList>> {
+        override fun onSuccess(result: MutableList<FollowList>) {
+          result.sortedBy { it.title }
+          lists = result
+          callback.onSuccess(result)
+          writeLists()
+        }
+
+        override fun onError(error: ErrorResponse) {
+          callback.onError(error)
+        }
+      })
+      .exec(accountID)
+  }
+
+  private fun loadLists(): MutableList<FollowList>? {
+    val base = getOrOpenDatabase()
+    base.query(
+      "misc",
+      arrayOf("value"),
+      "`key`=?",
+      arrayOf("lists"),
+      null,
+      null,
+      null
+    ).use { cursor ->
+      if (!cursor.moveToFirst()) return null
+      return MastodonAPIController.gson.fromJson(
+        cursor.getString(0),
+        object : TypeToken<MutableList<FollowList>>() {}.type
+      )
+    }
+  }
+
+  private fun writeLists() {
+    runOnDbThread { base ->
+      ContentValues().run {
+        put("key", "lists")
+        put("value", MastodonAPIController.gson.toJson(lists))
+        base.insertWithOnConflict("misc", null, this, CONFLICT_REPLACE)
+      }
+
+    }
+  }
+
+  fun getLists(callback: Callback<MutableList<FollowList>>) {
+    callback.onSuccess(lists)
+    return databaseThread.postRunnable({
+      val lists = loadLists() ?: mutableListOf()
+      this.lists = lists
+      uiHandler.post { callback.onSuccess(lists) }
+      return@postRunnable
+    }, 0)
+  }
+
+  fun addList(list: FollowList) {
+    lists.run {
+      add(list)
+      sortedBy { it.title }
+      writeLists()
+    }
+  }
+
+  fun deleteList(id: String) {
+    lists.removeIf { it.id == id }
+    writeLists()
+  }
+
+  fun updateList(list: FollowList) {
+    for (i in lists.indices) {
+      if (lists[i].id == list.id) {
+        lists[i] = list
+        lists.sortedBy { it.title }
+        writeLists()
+        break
+      }
+    }
+  }
+
+  private inner class DatabaseHelper :
+    SQLiteOpenHelper(MastodonApp.context, "$accountID.db", null, DB_VERSION) {
+    override fun onCreate(base: SQLiteDatabase) {
+      base.execSQL(
+        """
 						CREATE TABLE `home_timeline` (
 							`id` VARCHAR(25) NOT NULL PRIMARY KEY,
 							`json` TEXT NOT NULL,
 							`flags` INTEGER NOT NULL DEFAULT 0,
 							`time` INTEGER NOT NULL
-						)""");
-			createNotificationsTables(db, "all");
-			createNotificationsTables(db, "mentions");
-			createRecentSearchesTable(db);
-			createMiscTable(db);
-		}
+						)
+						""".trimIndent()
+      )
+      createNotificationsTables(base, ALL)
+      createNotificationsTables(base, MENTIONS)
+      createRecentSearchesTable(base)
+      createMiscTable(base)
+    }
 
-		@Override
-		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){
-			if(oldVersion<2){
-				createRecentSearchesTable(db);
-			}
-			if(oldVersion<3){
-				addTimeColumns(db);
-			}
-			if(oldVersion<4){
-				createMiscTable(db);
-			}
-			if(oldVersion<5){
-				db.execSQL("DROP TABLE `notifications_all`");
-				db.execSQL("DROP TABLE `notifications_mentions`");
-				createNotificationsTables(db, "all");
-				createNotificationsTables(db, "mentions");
-			}
-		}
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+      when {
+        oldVersion < 2 -> createRecentSearchesTable(db)
+        oldVersion < 3 -> addTimeColumns(db)
+        oldVersion < 4 -> createMiscTable(db)
 
-		private void createRecentSearchesTable(SQLiteDatabase db){
-			db.execSQL("""
+        oldVersion < 5 -> {
+          db.execSQL("DROP TABLE `notifications_all`")
+          db.execSQL("DROP TABLE `notifications_mentions`")
+          createNotificationsTables(db, ALL)
+          createNotificationsTables(db, MENTIONS)
+        }
+      }
+    }
+
+    fun createRecentSearchesTable(db: SQLiteDatabase) {
+      db.execSQL(
+        """
 						CREATE TABLE `recent_searches` (
 							`id` VARCHAR(50) NOT NULL PRIMARY KEY,
 							`json` TEXT NOT NULL,
 							`time` INTEGER NOT NULL
-						)""");
-		}
+						)
+						""".trimIndent()
+      )
+    }
 
-		private void addTimeColumns(SQLiteDatabase db){
-			db.execSQL("DELETE FROM `home_timeline`");
-			db.execSQL("DELETE FROM `notifications_all`");
-			db.execSQL("DELETE FROM `notifications_mentions`");
-			db.execSQL("ALTER TABLE `home_timeline` ADD `time` INTEGER NOT NULL DEFAULT 0");
-			db.execSQL("ALTER TABLE `notifications_all` ADD `time` INTEGER NOT NULL DEFAULT 0");
-			db.execSQL("ALTER TABLE `notifications_mentions` ADD `time` INTEGER NOT NULL DEFAULT 0");
-		}
+    fun addTimeColumns(base: SQLiteDatabase) {
+      base.run {
+        execSQL("DELETE FROM `home_timeline`")
+        execSQL("DELETE FROM `notifications_all`")
+        execSQL("DELETE FROM `notifications_mentions`")
+        execSQL("ALTER TABLE `home_timeline` ADD `time` INTEGER NOT NULL DEFAULT 0")
+        execSQL("ALTER TABLE `notifications_all` ADD `time` INTEGER NOT NULL DEFAULT 0")
+        execSQL("ALTER TABLE `notifications_mentions` ADD `time` INTEGER NOT NULL DEFAULT 0")
+      }
+    }
 
-		private void createMiscTable(SQLiteDatabase db){
-			db.execSQL("""
-						CREATE TABLE `misc` (
+    fun createMiscTable(db: SQLiteDatabase) {
+      db.execSQL( """
+        CREATE TABLE `misc` (
 							`key` TEXT NOT NULL PRIMARY KEY,
-							`value` TEXT
-						)""");
-		}
+							`value` TEXT )	""".trimIndent()
+      )
+    }
 
-		private void createNotificationsTables(SQLiteDatabase db, String suffix){
-			db.execSQL("CREATE TABLE `notifications_"+suffix+"` ("+
-							"""
-							`id` VARCHAR(100) NOT NULL PRIMARY KEY,
-							`json` TEXT NOT NULL,
-							`flags` INTEGER NOT NULL DEFAULT 0,
-							`type` INTEGER NOT NULL,
-							`time` INTEGER NOT NULL,
-							`max_id` VARCHAR(25) NOT NULL
-						)""");
-			db.execSQL("CREATE INDEX `notifications_"+suffix+"_max_id` ON `notifications_"+suffix+"`(`max_id`)");
-			db.execSQL("CREATE TABLE `notifications_accounts_"+suffix+"` ("+
-					"""
-					`id` VARCHAR(25) NOT NULL PRIMARY KEY,
-					`json` TEXT NOT NULL
-				)""");
-			db.execSQL("CREATE TABLE `notifications_statuses_"+suffix+"` ("+
-					"""
-					`id` VARCHAR(25) NOT NULL PRIMARY KEY,
-					`json` TEXT NOT NULL
-				)""");
-		}
-	}
+    fun createNotificationsTables(base: SQLiteDatabase, suffix: String?) {
+      base.run {
+        execSQL("""
+          CREATE TABLE `notifications_${suffix}` (
+                `id` VARCHAR(100) NOT NULL PRIMARY KEY,
+                `json` TEXT NOT NULL,
+                `flags` INTEGER NOT NULL DEFAULT 0,
+                `type` INTEGER NOT NULL,
+                `time` INTEGER NOT NULL,
+                `max_id` VARCHAR(25) NOT NULL ) """.trimIndent()
+        )
+        execSQL("CREATE INDEX `notifications_${suffix}_max_id` ON `notifications_$suffix`(`max_id`)")
+        execSQL("""  
+          CREATE TABLE `notifications_accounts_${suffix}` (
+                `id` VARCHAR(25) NOT NULL PRIMARY KEY,
+                `json` TEXT NOT NULL )""".trimIndent()
+        )
+        execSQL("""
+          CREATE TABLE `notifications_statuses_${suffix}` (
+                `id` VARCHAR(25) NOT NULL PRIMARY KEY,
+                `json` TEXT NOT NULL ) """.trimIndent()
+        )
+      }
+    }
+  }
 }

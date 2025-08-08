@@ -86,7 +86,7 @@ object GlobalUserPreferences {
     if (preReplyPrefs.getBoolean("opt_out_$type", false)) return true
     if (account == null) return false
     var accountKey = account.acct ?: ""
-    if (!accountKey.contains("@")) accountKey += "@${AccountSessionManager.get(accountID).domain}"
+    if (!accountKey.contains("@")) accountKey += "@${AccountSessionManager.getID(accountID).domain}"
     return preReplyPrefs.getBoolean(
       "opt_out_${type}_${accountKey.lowercase(Locale.getDefault())}",
       false
@@ -100,7 +100,7 @@ object GlobalUserPreferences {
       key = "opt_out_$type"
     } else {
       var accountKey = account.acct ?: ""
-      if (!accountKey.contains("@")) accountKey += "@${AccountSessionManager.get(accountID).domain}"
+      if (!accountKey.contains("@")) accountKey += "@${AccountSessionManager.getID(accountID).domain}"
       key = "opt_out_${type}_${accountKey.lowercase(Locale.getDefault())}"
     }
     preReplyPrefs.edit { putBoolean(key, true) }

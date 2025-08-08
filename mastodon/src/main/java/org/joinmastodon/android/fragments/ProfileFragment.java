@@ -630,7 +630,7 @@ public class ProfileFragment extends LoaderFragment implements ScrollableToTop, 
 		}
 		String domain=account.getDomain();
 		if(TextUtils.isEmpty(domain))
-			domain=AccountSessionManager.get(accountID).domain;
+			domain=AccountSessionManager.getID(accountID).domain;
 		usernameDomain.setText(domain);
 
 		CharSequence parsedBio=HtmlParser.parse(account.note, account.emojis, Collections.emptyList(), Collections.emptyList(), accountID, account, getActivity());

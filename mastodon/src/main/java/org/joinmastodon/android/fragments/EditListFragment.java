@@ -52,7 +52,7 @@ public class EditListFragment extends BaseEditListFragment{
 					.setCallback(new Callback<>(){
 						@Override
 						public void onSuccess(FollowList result){
-							AccountSessionManager.get(accountID).getCacheController().updateList(result);
+							AccountSessionManager.getID(accountID).getCacheController().updateList(result);
 							E.post(new ListUpdatedEvent(accountID, result));
 						}
 

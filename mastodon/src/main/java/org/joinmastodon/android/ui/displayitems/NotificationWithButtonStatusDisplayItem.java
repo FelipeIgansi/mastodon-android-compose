@@ -30,7 +30,7 @@ public class NotificationWithButtonStatusDisplayItem extends StatusDisplayItem{
 	public NotificationWithButtonStatusDisplayItem(String parentID, BaseStatusListFragment<?> parentFragment, NotificationViewModel notification, String accountID){
 		super(parentID, parentFragment);
 		this.notification=notification;
-		String localDomain=AccountSessionManager.get(accountID).domain;
+		String localDomain=AccountSessionManager.getID(accountID).domain;
 		if(notification.notification.type==NotificationType.SEVERED_RELATIONSHIPS){
 			RelationshipSeveranceEvent event=notification.notification.event;
 			if(event!=null){

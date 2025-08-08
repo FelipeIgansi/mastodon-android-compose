@@ -46,7 +46,7 @@ public class AddAccountToListsFragment extends BaseSettingsFragment<FollowList>{
 
 	@Override
 	protected void doLoadData(int offset, int count){
-		AccountSessionManager.get(accountID).getCacheController().getLists(new SimpleCallback<>(this){
+		AccountSessionManager.getID(accountID).getCacheController().getLists(new SimpleCallback<>(this){
 			@Override
 			public void onSuccess(List<FollowList> allLists){
 				if(getActivity()==null)

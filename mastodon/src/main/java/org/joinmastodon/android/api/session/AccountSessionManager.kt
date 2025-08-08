@@ -77,7 +77,7 @@ class AccountSessionManager private constructor() {
     val instance: AccountSessionManager = AccountSessionManager()
 
     @JvmStatic
-    fun get(id: String) = instance.getAccount(id)
+    fun getID(id: String) = instance.getAccount(id)
 
     private fun insertInstanceIntoDatabase(
       db: SQLiteDatabase,

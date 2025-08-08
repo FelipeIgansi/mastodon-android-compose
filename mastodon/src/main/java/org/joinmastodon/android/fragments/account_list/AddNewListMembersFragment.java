@@ -39,7 +39,7 @@ public class AddNewListMembersFragment extends AccountSearchFragment{
 	@Override
 	protected void doLoadData(int offset, int count){
 		if(TextUtils.isEmpty(currentQuery)){
-			currentRequest=new GetAccountFollowing(AccountSessionManager.get(accountID).self.id, offset>0 ? maxID : null, count)
+			currentRequest=new GetAccountFollowing(AccountSessionManager.getID(accountID).self.id, offset>0 ? maxID : null, count)
 					.setCallback(new SimpleCallback<>(this){
 						@Override
 						public void onSuccess(HeaderPaginationList<Account> result){

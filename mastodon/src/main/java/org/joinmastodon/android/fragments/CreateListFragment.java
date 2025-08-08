@@ -98,7 +98,7 @@ public class CreateListFragment extends BaseEditListFragment{
 							followList=result;
 							proceed(false);
 							E.post(new ListCreatedEvent(accountID, result));
-							AccountSessionManager.get(accountID).getCacheController().addList(result);
+							AccountSessionManager.getID(accountID).getCacheController().addList(result);
 						}
 
 						@Override
@@ -116,7 +116,7 @@ public class CreateListFragment extends BaseEditListFragment{
 							followList=result;
 							proceed(true);
 							E.post(new ListUpdatedEvent(accountID, result));
-							AccountSessionManager.get(accountID).getCacheController().updateList(result);
+							AccountSessionManager.getID(accountID).getCacheController().updateList(result);
 						}
 
 						@Override

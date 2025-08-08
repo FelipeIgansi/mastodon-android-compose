@@ -17,7 +17,7 @@ public class SettingsPrivacyFragment extends BaseSettingsFragment<Void>{
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		setTitle(R.string.settings_privacy);
-		Account self=AccountSessionManager.get(accountID).self;
+		Account self=AccountSessionManager.getID(accountID).self;
 		if(self.source==null)
 			self.source=new Source();
 		onDataLoaded(List.of(
@@ -34,11 +34,11 @@ public class SettingsPrivacyFragment extends BaseSettingsFragment<Void>{
 	@Override
 	public void onPause(){
 		super.onPause();
-		Account self=AccountSessionManager.get(accountID).self;
+		Account self=AccountSessionManager.getID(accountID).self;
 		if(self.discoverable!=discoverableItem.checked || (self.source.indexable!=null && self.source.indexable!=indexableItem.checked)){
 			self.discoverable=discoverableItem.checked;
 			self.source.indexable=indexableItem.checked;
-			AccountSessionManager.get(accountID).savePreferencesLater();
+			AccountSessionManager.getID(accountID).savePreferencesLater();
 		}
 	}
 }

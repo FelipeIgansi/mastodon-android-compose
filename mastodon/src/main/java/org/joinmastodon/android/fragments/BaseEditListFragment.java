@@ -120,7 +120,7 @@ public abstract class BaseEditListFragment extends BaseSettingsFragment<Void>{
 				.setCallback(new Callback<>(){
 					@Override
 					public void onSuccess(Unit result){
-						AccountSessionManager.get(accountID).getCacheController().deleteList(followList.id);
+						AccountSessionManager.getID(accountID).getCacheController().deleteList(followList.id);
 						E.post(new ListDeletedEvent(accountID, followList.id));
 						Nav.finish(BaseEditListFragment.this);
 					}

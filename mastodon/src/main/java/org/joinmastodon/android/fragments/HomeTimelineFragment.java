@@ -132,8 +132,8 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 		super.onCreate(savedInstanceState);
 		localTimelineBannerHelper=new DiscoverInfoBannerHelper(DiscoverInfoBannerHelper.BannerType.LOCAL_TIMELINE, accountID);
 
-		if(AccountSessionManager.get(accountID).isEligibleForDonations()){
-			GetDonationCampaigns req=new GetDonationCampaigns(Locale.getDefault().toLanguageTag().replace('-', '_'), String.valueOf(AccountSessionManager.get(accountID).getDonationSeed()), null);
+		if(AccountSessionManager.getID(accountID).isEligibleForDonations()){
+			GetDonationCampaigns req=new GetDonationCampaigns(Locale.getDefault().toLanguageTag().replace('-', '_'), String.valueOf(AccountSessionManager.getID(accountID).getDonationSeed()), null);
 			if(getActivity().getSharedPreferences("debug", Context.MODE_PRIVATE).getBoolean("donationsStaging", false)){
 				req.setStaging(true);
 			}
@@ -196,7 +196,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 		});
 		setHasOptionsMenu(true);
 		loadData();
-		AccountSessionManager.get(accountID).getCacheController().getLists(new Callback<>(){
+		AccountSessionManager.getID(accountID).getCacheController().getLists(new Callback<>(){
 			@Override
 			public void onSuccess(List<FollowList> result){
 				lists=result;
@@ -242,7 +242,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 								if(refreshing)
 									list.scrollToPosition(0);
 								maxID=result.isEmpty() ? null : result.get(result.size()-1).id;
-								AccountSessionManager.get(accountID).filterStatuses(result, FilterContext.PUBLIC);
+								AccountSessionManager.getID(accountID).filterStatuses(result, FilterContext.PUBLIC);
 								onDataLoaded(result, !result.isEmpty());
 							}
 						})
@@ -256,7 +256,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 								if(refreshing)
 									list.scrollToPosition(0);
 								maxID=result.isEmpty() ? null : result.get(result.size()-1).id;
-								AccountSessionManager.get(accountID).filterStatuses(result, FilterContext.HOME);
+								AccountSessionManager.getID(accountID).filterStatuses(result, FilterContext.HOME);
 								onDataLoaded(result, !result.isEmpty());
 							}
 						})
@@ -462,7 +462,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 						Set<String> existingPostIDs=data.stream().map(s->s.id).collect(Collectors.toSet());
 						toAdd.removeIf(s->existingPostIDs.contains(s.id));
 						if(needCache)
-							AccountSessionManager.get(accountID).filterStatuses(toAdd, FilterContext.HOME);
+							AccountSessionManager.getID(accountID).filterStatuses(toAdd, FilterContext.HOME);
 						if(!toAdd.isEmpty()){
 							prependItems(toAdd, true);
 							showNewPostsButton();
@@ -547,7 +547,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 								result=result.subList(0, endIndex);
 							}
 							if(needCache)
-								AccountSessionManager.get(accountID).filterStatuses(result, FilterContext.HOME);
+								AccountSessionManager.getID(accountID).filterStatuses(result, FilterContext.HOME);
 							List<StatusDisplayItem> targetList=displayItems.subList(gapPos, gapPos+1); // Get a sub-list that contains the gap item
 							targetList.clear(); // remove the gap item
 							List<Status> insertedPosts=data.subList(gapPostIndex+1, gapPostIndex+1);
@@ -763,7 +763,7 @@ public class HomeTimelineFragment extends StatusListFragment implements ToolbarD
 	private void onListsDropdownClick(View v){
 		listsDropdownArrow.animate().rotation(-180f).setDuration(150).setInterpolator(CubicBezierInterpolator.DEFAULT).start();
 		dropdownController.show(dropdownMainMenuController);
-		AccountSessionManager.get(accountID).getCacheController().reloadLists(new Callback<>(){
+		AccountSessionManager.getID(accountID).getCacheController().reloadLists(new Callback<>(){
 			@Override
 			public void onSuccess(java.util.List<FollowList> result){
 				lists=result;

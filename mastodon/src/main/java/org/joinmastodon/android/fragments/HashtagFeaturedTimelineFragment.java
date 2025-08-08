@@ -38,7 +38,7 @@ public class HashtagFeaturedTimelineFragment extends StatusListFragment{
 						if(getActivity()==null)
 							return;
 						boolean empty=result.isEmpty();
-						AccountSessionManager.get(accountID).filterStatuses(result, FilterContext.ACCOUNT);
+						AccountSessionManager.getID(accountID).filterStatuses(result, FilterContext.ACCOUNT);
 						onDataLoaded(result, !empty);
 					}
 				})

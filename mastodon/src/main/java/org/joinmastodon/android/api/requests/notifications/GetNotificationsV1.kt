@@ -12,10 +12,10 @@ class GetNotificationsV1 @JvmOverloads constructor(
     limit: Int,
     includeTypes: EnumSet<NotificationType>?,
     onlyAccountID: String? = null
-) : MastodonAPIRequest<@JvmSuppressWildcards List<Notification>>(
+) : MastodonAPIRequest< MutableList<Notification>>(
     method = HttpMethod.GET,
     path = "/notifications",
-    respTypeToken = object : TypeToken<List<Notification>>() {}
+    respTypeToken = object : TypeToken<MutableList<Notification>>() {}
 ) {
     /**
     suppression added, as the callback was capturing a generic, and not understanding the correct value

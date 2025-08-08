@@ -48,7 +48,6 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -625,11 +624,11 @@ public class PhotoViewer implements ZoomPanView.Listener{
 		int id=view.getId();
 		if(id==R.id.boost_btn){
 			if(status!=null){
-				AccountSessionManager.get(accountID).getStatusInteractionController().setReblogged(status, !status.reblogged);
+				AccountSessionManager.getID(accountID).getStatusInteractionController().setReblogged(status, !status.reblogged);
 			}
 		}else if(id==R.id.favorite_btn){
 			if(status!=null){
-				AccountSessionManager.get(accountID).getStatusInteractionController().setFavorited(status, !status.favourited);
+				AccountSessionManager.getID(accountID).getStatusInteractionController().setFavorited(status, !status.favourited);
 			}
 		}else if(id==R.id.share_btn){
 			if(status!=null){
@@ -637,7 +636,7 @@ public class PhotoViewer implements ZoomPanView.Listener{
 			}
 		}else if(id==R.id.bookmark_btn){
 			if(status!=null){
-				AccountSessionManager.get(accountID).getStatusInteractionController().setBookmarked(status, !status.bookmarked);
+				AccountSessionManager.getID(accountID).getStatusInteractionController().setBookmarked(status, !status.bookmarked);
 			}
 		}else if(id==R.id.reply_btn){
 			parentFragment.maybeShowPreReplySheet(status, ()->{

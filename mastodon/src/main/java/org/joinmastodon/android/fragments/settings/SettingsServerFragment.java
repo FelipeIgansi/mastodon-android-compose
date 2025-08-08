@@ -44,7 +44,7 @@ public class SettingsServerFragment extends AppKitFragment{
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		accountID=getArguments().getString("account");
-		setTitle(AccountSessionManager.get(accountID).domain);
+		setTitle(AccountSessionManager.getID(accountID).domain);
 
 		Bundle args=new Bundle();
 		args.putString("account", accountID);

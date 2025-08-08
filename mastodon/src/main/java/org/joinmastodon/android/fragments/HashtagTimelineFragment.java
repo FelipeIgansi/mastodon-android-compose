@@ -75,7 +75,7 @@ public class HashtagTimelineFragment extends StatusListFragment{
 					public void onSuccess(List<Status> result){
 						if(!result.isEmpty())
 							maxID=result.get(result.size()-1).id;
-						AccountSessionManager.get(accountID).filterStatuses(result, FilterContext.PUBLIC);
+						AccountSessionManager.getID(accountID).filterStatuses(result, FilterContext.PUBLIC);
 						onDataLoaded(result, !result.isEmpty());
 					}
 				})

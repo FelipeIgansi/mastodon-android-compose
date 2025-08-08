@@ -133,7 +133,7 @@ public class ThreadFragment extends StatusListFragment implements AssistContentP
 	}
 
 	private void filterStatuses(List<Status> statuses){
-		AccountSessionManager.get(accountID).filterStatuses(statuses, FilterContext.THREAD);
+		AccountSessionManager.getID(accountID).filterStatuses(statuses, FilterContext.THREAD);
 	}
 
 	@Override
@@ -158,7 +158,7 @@ public class ThreadFragment extends StatusListFragment implements AssistContentP
 		replyButtonAva.setOutlineProvider(OutlineProviders.OVAL);
 		replyButtonAva.setClipToOutline(true);
 		replyButton.setOnClickListener(v->openReply());
-		Account self=AccountSessionManager.get(accountID).self;
+		Account self=AccountSessionManager.getID(accountID).self;
 		if(!TextUtils.isEmpty(self.avatar)){
 			ViewImageLoader.loadWithoutAnimation(replyButtonAva, getResources().getDrawable(R.drawable.image_placeholder, getActivity().getTheme()), new UrlImageLoaderRequest(self.avatar, V.dp(24), V.dp(24)));
 		}

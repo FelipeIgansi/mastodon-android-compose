@@ -66,11 +66,11 @@ public class ManageListsFragment extends BaseSettingsFragment<FollowList> implem
 			}
 		};
 		if(refreshing){
-			AccountSessionManager.get(accountID)
+			AccountSessionManager.getID(accountID)
 					.getCacheController()
 					.reloadLists(callback);
 		}else{
-			AccountSessionManager.get(accountID)
+			AccountSessionManager.getID(accountID)
 					.getCacheController()
 					.getLists(callback);
 		}
@@ -135,7 +135,7 @@ public class ManageListsFragment extends BaseSettingsFragment<FollowList> implem
 							if(data.get(i).parentObject==list){
 								data.remove(i);
 								itemsAdapter.notifyItemRemoved(i);
-								AccountSessionManager.get(accountID).getCacheController().deleteList(list.id);
+								AccountSessionManager.getID(accountID).getCacheController().deleteList(list.id);
 								break;
 							}
 						}

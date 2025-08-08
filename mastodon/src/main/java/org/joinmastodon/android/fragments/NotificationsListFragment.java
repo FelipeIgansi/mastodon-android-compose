@@ -73,7 +73,7 @@ public class NotificationsListFragment extends BaseNotificationsListFragment{
 		super.onCreate(savedInstanceState);
 		setLayout(R.layout.fragment_notifications);
 		E.register(this);
-		onlyMentions=AccountSessionManager.get(accountID).isNotificationsMentionsOnly();
+		onlyMentions=AccountSessionManager.getID(accountID).isNotificationsMentionsOnly();
 		setHasOptionsMenu(true);
 	}
 
@@ -117,7 +117,7 @@ public class NotificationsListFragment extends BaseNotificationsListFragment{
 	@Override
 	protected void onShown(){
 		super.onShown();
-		unreadMarker=realUnreadMarker=AccountSessionManager.get(accountID).getLastKnownNotificationsMarker();
+		unreadMarker=realUnreadMarker=AccountSessionManager.getID(accountID).getLastKnownNotificationsMarker();
 		if(canRefreshWithoutUpsettingUser()){
 			if(dataLoading)
 				refreshAfterLoading=true;
@@ -241,7 +241,7 @@ public class NotificationsListFragment extends BaseNotificationsListFragment{
 		refreshing=true;
 		reloadingFromCache=true;
 		loadData(0, 20);
-		AccountSessionManager.get(accountID).setNotificationsMentionsOnly(onlyMentions);
+		AccountSessionManager.getID(accountID).setNotificationsMentionsOnly(onlyMentions);
 	}
 
 	@Override
@@ -278,7 +278,7 @@ public class NotificationsListFragment extends BaseNotificationsListFragment{
 		String id=data.get(0).notification.pageMaxId;
 		if(force || ObjectIdComparator.INSTANCE.compare(id, realUnreadMarker)>0){
 			new SaveMarkers(null, id).exec(accountID);
-			AccountSessionManager.get(accountID).setNotificationsMarker(id, true);
+			AccountSessionManager.getID(accountID).setNotificationsMarker(id, true);
 			realUnreadMarker=id;
 		}
 	}
@@ -292,7 +292,7 @@ public class NotificationsListFragment extends BaseNotificationsListFragment{
 	public void onRefresh(){
 		super.onRefresh();
 		resetUnreadBackground();
-		AccountSessionManager.get(accountID).reloadNotificationsMarker(m->{
+		AccountSessionManager.getID(accountID).reloadNotificationsMarker(m->{
 			unreadMarker=realUnreadMarker=m;
 		});
 	}

@@ -50,7 +50,7 @@ public class DiscoverInfoBannerHelper{
 			text.setText(switch(type){
 				case TRENDING_POSTS -> list.getResources().getString(R.string.trending_posts_info_banner);
 				case TRENDING_LINKS -> list.getResources().getString(R.string.trending_links_info_banner);
-				case LOCAL_TIMELINE -> list.getResources().getString(R.string.local_timeline_info_banner, AccountSessionManager.get(accountID).domain);
+				case LOCAL_TIMELINE -> list.getResources().getString(R.string.local_timeline_info_banner, AccountSessionManager.getID(accountID).domain);
 				case ACCOUNTS -> list.getResources().getString(R.string.recommended_accounts_info_banner);
 			});
 			ImageView icon=banner.findViewById(R.id.icon);

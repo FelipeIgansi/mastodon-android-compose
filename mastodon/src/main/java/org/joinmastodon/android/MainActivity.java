@@ -104,7 +104,7 @@ public class MainActivity extends FragmentStackActivity{
 		if(accountID==null)
 			session= AccountSessionManager.instance.getLastActiveAccount();
 		else
-			session=AccountSessionManager.get(accountID);
+			session=AccountSessionManager.getID(accountID);
 		if(session==null || !session.activated)
 			return;
 		openSearchQuery(uri.toString(), session.getID(), R.string.opening_link, false, null);

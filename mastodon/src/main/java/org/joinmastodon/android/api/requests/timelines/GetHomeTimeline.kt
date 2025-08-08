@@ -9,10 +9,10 @@ class GetHomeTimeline(
   minID: String?,
   limit: Int,
   sinceID: String?
-) : MastodonAPIRequest<MutableList<Status?>?>(
+) : MastodonAPIRequest<MutableList<Status>>(
   method = HttpMethod.GET,
   path = "/timelines/home",
-  respTypeToken = object : TypeToken<MutableList<Status?>?>() {}) {
+  respTypeToken = object : TypeToken<MutableList<Status>>() {}) {
   init {
     if (maxID != null) addQueryParameter("max_id", maxID)
     if (minID != null) addQueryParameter("min_id", minID)

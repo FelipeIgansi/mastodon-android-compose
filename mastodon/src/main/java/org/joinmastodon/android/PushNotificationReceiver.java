@@ -130,7 +130,7 @@ public class PushNotificationReceiver extends BroadcastReceiver{
 		Notification.Builder builder;
 		if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
 			boolean hasGroup=false;
-			int version=AccountSessionManager.get(accountID).getRawLocalPreferences().getInt("notificationChannelsVersion", 1);
+			int version=AccountSessionManager.getID(accountID).getRawLocalPreferences().getInt("notificationChannelsVersion", 1);
 			List<NotificationChannelGroup> channelGroups=nm.getNotificationChannelGroups();
 			for(NotificationChannelGroup group:channelGroups){
 				if(group.getId().equals(accountID)){
@@ -151,7 +151,7 @@ public class PushNotificationReceiver extends BroadcastReceiver{
 						})
 						.collect(Collectors.toList());
 				nm.createNotificationChannels(channels);
-				AccountSessionManager.get(accountID).getRawLocalPreferences().edit().putInt("notificationChannelsVersion", 2).apply();
+				AccountSessionManager.getID(accountID).getRawLocalPreferences().edit().putInt("notificationChannelsVersion", 2).apply();
 			}
 			builder=new Notification.Builder(context, accountID+"_"+pn.notificationType);
 		}else{

@@ -73,7 +73,7 @@ public class SettingsMainFragment extends BaseSettingsFragment<Object>{
 				new ListItem<>(R.string.settings_display, 0, R.drawable.ic_style_24px, this::onDisplayClick)
 
 		));
-		if(AccountSessionManager.get(accountID).isEligibleForDonations()){
+		if(AccountSessionManager.getID(accountID).isEligibleForDonations()){
 			items.add(new ListItem<>(R.string.settings_manage_donations, 0, R.drawable.ic_settings_heart_24px, this::onManageDonationClick));
 		}
 		items.add(new ListItem<>(getString(R.string.about_app, getString(R.string.app_name)), null, R.drawable.ic_info_24px, this::onAboutClick, null));
@@ -84,7 +84,7 @@ public class SettingsMainFragment extends BaseSettingsFragment<Object>{
 		//noinspection unchecked
 		onDataLoaded((List<ListItem<Object>>)(Object)items);
 
-		AccountSession session=AccountSessionManager.get(accountID);
+		AccountSession session=AccountSessionManager.getID(accountID);
 		session.reloadPreferences(null);
 		session.updateAccountInfo();
 		E.register(this);

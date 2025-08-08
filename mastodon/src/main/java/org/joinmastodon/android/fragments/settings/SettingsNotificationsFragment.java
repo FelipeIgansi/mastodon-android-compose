@@ -165,7 +165,7 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 	}
 
 	private void resumePausedNotifications(){
-		AccountSessionManager.get(accountID).getLocalPreferences().setNotificationsPauseEndTime(0);
+		AccountSessionManager.getID(accountID).getLocalPreferences().setNotificationsPauseEndTime(0);
 		updatePauseItem();
 	}
 
@@ -182,7 +182,7 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 	}
 
 	private void onPauseNotificationsClick(boolean fromSwitch){
-		long time=AccountSessionManager.get(accountID).getLocalPreferences().getNotificationsPauseEndTime();
+		long time=AccountSessionManager.getID(accountID).getLocalPreferences().getNotificationsPauseEndTime();
 		if(time>System.currentTimeMillis() && fromSwitch){
 			resumePausedNotifications();
 			return;
@@ -199,7 +199,7 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 				.setTitle(R.string.pause_all_notifications_title)
 				.setSupportingText(time>System.currentTimeMillis() ? getString(R.string.pause_notifications_ends, UiUtils.formatRelativeTimestampAsMinutesAgo(getActivity(), Instant.ofEpochMilli(time), false)) : null)
 				.setSingleChoiceItems(Arrays.stream(durationOptions).mapToObj(d->UiUtils.formatDuration(getActivity(), d)).toArray(String[]::new), -1, (dlg, item)->{
-					AccountSessionManager.get(accountID).getLocalPreferences().setNotificationsPauseEndTime(System.currentTimeMillis()+durationOptions[item]*1000L);
+					AccountSessionManager.getID(accountID).getLocalPreferences().setNotificationsPauseEndTime(System.currentTimeMillis()+durationOptions[item]*1000L);
 					dlg.dismiss();
 				})
 				.show();
@@ -246,7 +246,7 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 	}
 
 	private void updatePauseItem(){
-		long time=AccountSessionManager.get(accountID).getLocalPreferences().getNotificationsPauseEndTime();
+		long time=AccountSessionManager.getID(accountID).getLocalPreferences().getNotificationsPauseEndTime();
 		if(time<System.currentTimeMillis()){
 			pauseItem.subtitle=getString(R.string.pause_notifications_off);
 			pauseItem.checked=false;
@@ -261,7 +261,7 @@ public class SettingsNotificationsFragment extends BaseSettingsFragment<Void>{
 	private void updateBanner(){
 		if(bannerAdapter==null)
 			return;
-		long pauseTime=AccountSessionManager.get(accountID).getLocalPreferences().getNotificationsPauseEndTime();
+		long pauseTime=AccountSessionManager.getID(accountID).getLocalPreferences().getNotificationsPauseEndTime();
 		if(!areNotificationsAllowed()){
 			bannerAdapter.setVisible(true);
 			bannerIcon.setImageResource(R.drawable.ic_app_badging_24px);

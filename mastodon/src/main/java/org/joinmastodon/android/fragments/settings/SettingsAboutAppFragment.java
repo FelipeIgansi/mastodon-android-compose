@@ -35,7 +35,7 @@ public class SettingsAboutAppFragment extends BaseSettingsFragment<Void>{
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		setTitle(getString(R.string.about_app, getString(R.string.app_name)));
-		AccountSession s=AccountSessionManager.get(accountID);
+		AccountSession s=AccountSessionManager.getID(accountID);
 		onDataLoaded(List.of(
 				new ListItem<>(R.string.settings_even_more, 0, i->UiUtils.launchWebBrowser(getActivity(), "https://"+s.domain+"/auth/edit")),
 				new ListItem<>(R.string.settings_contribute, 0, i->UiUtils.launchWebBrowser(getActivity(), getString(R.string.github_url))),

@@ -293,7 +293,7 @@ public class HomeFragment extends AppKitFragment implements AssistContentProvide
 	}
 
 	private void reloadNotificationsForUnreadCount(){
-		Instance instance=AccountSessionManager.get(accountID).getInstanceInfo();
+		Instance instance=AccountSessionManager.getID(accountID).getInstanceInfo();
 		if(instance==null)
 			return;
 		if(instance.getApiVersion()>=2){
@@ -313,7 +313,7 @@ public class HomeFragment extends AppKitFragment implements AssistContentProvide
 		}else{
 			List<Notification>[] notifications=new List[]{null};
 			String[] marker={null};
-			AccountSessionManager.get(accountID).reloadNotificationsMarker(m->{
+			AccountSessionManager.getID(accountID).reloadNotificationsMarker(m->{
 				marker[0]=m;
 				if(notifications[0]!=null){
 					updateUnreadCountV1(notifications[0], marker[0]);

@@ -32,7 +32,7 @@ public class DiscoverPostsFragment extends StatusListFragment{
 					@Override
 					public void onSuccess(List<Status> result){
 						realOffset+=result.size();
-						AccountSessionManager.get(accountID).filterStatuses(result, FilterContext.PUBLIC);
+						AccountSessionManager.getID(accountID).filterStatuses(result, FilterContext.PUBLIC);
 						onDataLoaded(result, !result.isEmpty());
 						bannerHelper.onBannerBecameVisible();
 					}

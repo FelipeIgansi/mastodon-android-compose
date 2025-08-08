@@ -36,7 +36,6 @@ import me.grishka.appkit.api.ErrorResponse;
 import me.grishka.appkit.utils.CubicBezierInterpolator;
 import me.grishka.appkit.utils.MergeRecyclerAdapter;
 import me.grishka.appkit.utils.SingleViewRecyclerAdapter;
-import me.grishka.appkit.utils.V;
 
 public class SettingsAccountFragment extends BaseSettingsFragment<Void>{
 	private static final int DONATION_RESULT=433;
@@ -49,7 +48,7 @@ public class SettingsAccountFragment extends BaseSettingsFragment<Void>{
 	@Override
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
-		AccountSession account=AccountSessionManager.get(accountID);
+		AccountSession account=AccountSessionManager.getID(accountID);
 		setTitle(account.getFullUsername());
 		if(account.preferences!=null && account.preferences.postingDefaultLanguage!=null){
 			postLanguage=Locale.forLanguageTag(account.preferences.postingDefaultLanguage);
@@ -96,13 +95,13 @@ public class SettingsAccountFragment extends BaseSettingsFragment<Void>{
 		super.onHidden();
 		if(!loggedOut){
 			if(newPostLanguage!=null){
-				AccountSession s=AccountSessionManager.get(accountID);
+				AccountSession s=AccountSessionManager.getID(accountID);
 				if(s.preferences==null)
 					s.preferences=new Preferences();
 				s.preferences.postingDefaultLanguage=newPostLanguage.locale.toLanguageTag();
 				s.savePreferencesLater();
 			}
-			AccountSessionManager.get(accountID).savePreferencesIfPending();
+			AccountSessionManager.getID(accountID).savePreferencesIfPending();
 		}
 	}
 
@@ -185,7 +184,7 @@ public class SettingsAccountFragment extends BaseSettingsFragment<Void>{
 	}
 
 	private void onDonateClick(ListItem<?> item){
-		GetDonationCampaigns req=new GetDonationCampaigns(Locale.getDefault().toLanguageTag().replace('-', '_'), String.valueOf(AccountSessionManager.get(accountID).getDonationSeed()), "menu");
+		GetDonationCampaigns req=new GetDonationCampaigns(Locale.getDefault().toLanguageTag().replace('-', '_'), String.valueOf(AccountSessionManager.getID(accountID).getDonationSeed()), "menu");
 		if(useStagingEnvironmentForDonations()){
 			req.setStaging(true);
 		}
@@ -229,7 +228,7 @@ public class SettingsAccountFragment extends BaseSettingsFragment<Void>{
 		AccountSession session= AccountSessionManager.instance.getAccount(accountID);
 		new M3AlertDialogBuilder(getActivity())
 				.setMessage(getString(R.string.confirm_log_out, session.getFullUsername()))
-				.setPositiveButton(R.string.log_out, (dialog, which)->AccountSessionManager.get(accountID).logOut(getActivity(), ()->{
+				.setPositiveButton(R.string.log_out, (dialog, which)->AccountSessionManager.getID(accountID).logOut(getActivity(), ()->{
 					loggedOut=true;
 					((MainActivity)getActivity()).restartHomeFragment();
 				}))

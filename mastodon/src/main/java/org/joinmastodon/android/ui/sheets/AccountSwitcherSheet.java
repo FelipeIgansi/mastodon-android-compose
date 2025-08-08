@@ -120,7 +120,7 @@ public class AccountSwitcherSheet extends BottomSheet{
 
 	private void logOut(String accountID){
 		String activeAccount= AccountSessionManager.instance.getLastActiveAccountID();
-		AccountSessionManager.get(accountID).logOut(activity, ()->{
+		AccountSessionManager.getID(accountID).logOut(activity, ()->{
 			if(accountID.equals(activeAccount) && onLoggedOutCallback!=null)
 				onLoggedOutCallback.run();
 			dismiss();
