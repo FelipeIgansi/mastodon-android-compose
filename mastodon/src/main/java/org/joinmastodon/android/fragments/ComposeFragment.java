@@ -57,6 +57,7 @@ import org.joinmastodon.android.api.requests.statuses.CreateStatus;
 import org.joinmastodon.android.api.requests.statuses.EditStatus;
 import org.joinmastodon.android.api.session.AccountSession;
 import org.joinmastodon.android.api.session.AccountSessionManager;
+import org.joinmastodon.android.events.CounterType;
 import org.joinmastodon.android.events.StatusCountersUpdatedEvent;
 import org.joinmastodon.android.events.StatusCreatedEvent;
 import org.joinmastodon.android.events.StatusUpdatedEvent;
@@ -780,7 +781,7 @@ public class ComposeFragment extends MastodonToolbarFragment implements ComposeE
 					E.post(new StatusCreatedEvent(result, accountID));
 					if(replyTo!=null){
 						replyTo.repliesCount++;
-						E.post(new StatusCountersUpdatedEvent(replyTo));
+						E.post(new StatusCountersUpdatedEvent(replyTo, CounterType.REPLIES));
 					}
 				}else{
 					E.post(new StatusUpdatedEvent(result));

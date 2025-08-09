@@ -52,6 +52,7 @@ class AccountSession {
 
     const val FLAG_ACTIVATED: Int = 1
     const val FLAG_NEED_UPDATE_PUSH_SETTINGS: Int = 1 shl 1
+    const val FLAG_NEED_RE_REGISTER_PUSH: Int = 1 shl 2
   }
 
 
@@ -141,7 +142,8 @@ class AccountSession {
 
   fun getRawLocalPreferences(): SharedPreferences {
     if (prefs == null) {
-      val currentContext = checkNotNull(MastodonApp.context) { "AccountSession File: Application context is null" }
+      val currentContext =
+        checkNotNull(MastodonApp.context) { "AccountSession File: Application context is null" }
       val newPrefs = currentContext.getSharedPreferences(getID(), Context.MODE_PRIVATE)
       prefs = newPrefs
     }
@@ -155,7 +157,8 @@ class AccountSession {
     get() = self?.let { "@${it.username}@$domain" }
       ?: throw IllegalStateException("AccountSession File: FullUserName is null")
 
-  fun getLastKnownNotificationsMarker() = getRawLocalPreferences().getString("notificationsMarker", null)
+  fun getLastKnownNotificationsMarker() = getRawLocalPreferences()
+    .getString("notificationsMarker", null)
 
 
   var isNotificationsMentionsOnly: Boolean
@@ -181,17 +184,27 @@ class AccountSession {
           )
     }
 
+  var needReRegisterForPush = false
+
   val donationSeed: Int
     get() = abs(this.fullUsername.hashCode()) % 100
 
   val instanceInfo: Instance?
     get() = domain?.let { AccountSessionManager.instance.getInstanceInfo(it) }
 
+  val hasPushCredentials =
+      pushAccountID != null &&
+      pushAuthKey != null &&
+      pushPrivateKey != null &&
+      pushPublicKey != null
+
+
   fun getFlagsForDatabase(): Long {
-    var flags: Long = 0
-    if (activated) flags = flags or FLAG_ACTIVATED.toLong()
-    if (needUpdatePushSettings) flags = flags or FLAG_NEED_UPDATE_PUSH_SETTINGS.toLong()
-    return flags
+    var flags = 0
+    if (activated) flags = flags or FLAG_ACTIVATED
+    if (needUpdatePushSettings) flags = flags or FLAG_NEED_UPDATE_PUSH_SETTINGS
+    if (needReRegisterForPush) flags = flags or FLAG_NEED_RE_REGISTER_PUSH
+    return flags.toLong()
   }
 
 
@@ -227,8 +240,8 @@ class AccountSession {
 
     val flags = values.getAsLong("flags") ?: 0L
     activated = (flags and FLAG_ACTIVATED.toLong()) == FLAG_ACTIVATED.toLong()
-    needUpdatePushSettings = (flags and FLAG_NEED_UPDATE_PUSH_SETTINGS.toLong()) == FLAG_NEED_UPDATE_PUSH_SETTINGS.toLong()
-
+    needUpdatePushSettings = (flags.toInt() and FLAG_NEED_UPDATE_PUSH_SETTINGS) == FLAG_NEED_UPDATE_PUSH_SETTINGS
+    needReRegisterForPush = (flags.toInt() and FLAG_NEED_RE_REGISTER_PUSH) == FLAG_NEED_RE_REGISTER_PUSH
     val pushKeys = JsonParser.parseString(values.getAsString("push_keys")).getAsJsonObject()
     if (!pushKeys.get("auth").isJsonNull && !pushKeys.get("private")
         .isJsonNull && !pushKeys.get("public").isJsonNull
@@ -300,12 +313,12 @@ class AccountSession {
   }
 
 
-  fun reloadPreferences(callback: Consumer<Preferences>) {
+  fun reloadPreferences(callback: Consumer<Preferences>?) {
     GetPreferences()
       .setCallback(object : Callback<Preferences> {
         override fun onSuccess(result: Preferences) {
           preferences = result
-          callback.accept(result)
+          callback?.accept(result)
           AccountSessionManager.instance.updateAccountPreferences(getID(), result)
         }
 

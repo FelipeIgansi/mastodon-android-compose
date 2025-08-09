@@ -68,9 +68,18 @@ class AccountSessionManager private constructor() {
 
   companion object {
     private const val TAG = "AccountSessionManager"
-    const val SCOPE: String = "read write follow push"
-    const val REDIRECT_URI: String = "mastodon-android-auth://callback"
+    const val SCOPE = "read write follow push"
+    const val REDIRECT_URI = "mastodon-android-auth://callback"
     private const val DB_VERSION = 3
+
+    @JvmStatic
+    private fun findAnySessionForDomain(domain: String): AccountSession? {
+      instance.sessions.values.forEach { session ->
+        if (domain.equals(session.domain, ignoreCase = true)) return session
+      }
+      return null
+    }
+
 
     @SuppressLint("StaticFieldLeak")
     @JvmField
@@ -103,7 +112,8 @@ class AccountSessionManager private constructor() {
       callback: Callback<Instance>
     ): APIRequest<Instance> {
       val wrapper = WrapperRequest<Instance>()
-      wrapper.wrappedRequest = GetInstanceV2().setCallback(object : Callback<InstanceV2> {
+      val session = findAnySessionForDomain(domain)
+      val req = GetInstanceV2().setCallback(object : Callback<InstanceV2> {
 
         override fun onSuccess(result: InstanceV2) {
           wrapper.wrappedRequest = null
@@ -113,7 +123,7 @@ class AccountSessionManager private constructor() {
         override fun onError(error: ErrorResponse) {
           if (error is MastodonErrorResponse && error.httpStatus == 404) {
             // Mastodon pre-4.0 or a non-Mastodon server altogether. Let's try /api/v1/instance
-            wrapper.wrappedRequest = GetInstanceV1().setCallback(object : Callback<InstanceV1> {
+            val fallbackReq = GetInstanceV1().setCallback(object : Callback<InstanceV1> {
 
               override fun onSuccess(result: InstanceV1) {
                 wrapper.wrappedRequest = null
@@ -124,13 +134,22 @@ class AccountSessionManager private constructor() {
                 wrapper.wrappedRequest = null
                 callback.onError(error)
               }
-            }).execNoAuth(domain)
+            })
+            wrapper.wrappedRequest = fallbackReq
+            if (session != null) fallbackReq.exec(session.getID())
+            else fallbackReq.execNoAuth(domain)
+
           } else {
             wrapper.wrappedRequest = null
             callback.onError(error)
           }
         }
-      }).execNoAuth(domain)
+      })
+
+      wrapper.wrappedRequest = req
+      if (session != null) req.exec(session.getID())
+      else req.execNoAuth(domain)
+      
       return wrapper
     }
   }
@@ -286,7 +305,7 @@ class AccountSessionManager private constructor() {
           path("/oauth/authorize")
           appendQueryParameter("response_type", "code")
           appendQueryParameter("client_id", result.clientId)
-          appendQueryParameter("redirect_uri", "mastodon-android-auth://callback")
+          appendQueryParameter("redirect_uri", REDIRECT_URI)
           appendQueryParameter("scope", SCOPE)
         }.build()
 

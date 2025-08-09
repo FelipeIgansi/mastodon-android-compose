@@ -10,7 +10,8 @@ class RegisterAccount(
   locale: String,
   reason: String,
   timezone: String,
-  inviteCode: String
+  inviteCode: String,
+  dateOfBirth: String?
 ) :
   MastodonAPIRequest<Token>(
     method = HttpMethod.POST,
@@ -20,7 +21,7 @@ class RegisterAccount(
 
   init {
     setRequestBody(
-      Body(username, email, password, locale, reason, timezone, inviteCode)
+      Body(username, email, password, locale, reason, timezone, inviteCode, dateOfBirth)
     )
   }
 
@@ -32,6 +33,7 @@ class RegisterAccount(
     val reason: String,
     val timeZone: String,
     val inviteCode: String,
-    val agreement: Boolean = true // valor padrão mantido
+    val dateOfBirth: String?,
+    private val agreement: Boolean = true,
   )
 }

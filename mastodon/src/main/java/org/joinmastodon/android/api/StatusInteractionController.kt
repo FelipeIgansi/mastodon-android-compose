@@ -8,6 +8,7 @@ import org.joinmastodon.android.MastodonApp
 import org.joinmastodon.android.api.requests.statuses.SetStatusBookmarked
 import org.joinmastodon.android.api.requests.statuses.SetStatusFavorited
 import org.joinmastodon.android.api.requests.statuses.SetStatusReblogged
+import org.joinmastodon.android.events.CounterType
 import org.joinmastodon.android.events.StatusCountersUpdatedEvent
 import org.joinmastodon.android.model.Status
 
@@ -27,7 +28,7 @@ class StatusInteractionController(private val accountID: String) {
 
         override fun onSuccess(result: Status) {
           runningFavoriteRequests.remove(status.id)
-          post(StatusCountersUpdatedEvent(result))
+          post(StatusCountersUpdatedEvent(result, CounterType.FAVORITES))
         }
 
         override fun onError(error: ErrorResponse) {
@@ -36,7 +37,7 @@ class StatusInteractionController(private val accountID: String) {
           status.favourited = !favorited
           if (favorited) status.favouritesCount--
           else status.favouritesCount++
-          post(StatusCountersUpdatedEvent(status))
+          post(StatusCountersUpdatedEvent(status, CounterType.FAVORITES))
         }
       })
       .exec(accountID) as SetStatusFavorited
@@ -46,7 +47,7 @@ class StatusInteractionController(private val accountID: String) {
     if (favorited) status.favouritesCount++
     else status.favouritesCount--
 
-    post(StatusCountersUpdatedEvent(status))
+    post(StatusCountersUpdatedEvent(status, CounterType.FAVORITES))
   }
 
   fun setReblogged(status: Status, reblogged: Boolean) {
@@ -59,7 +60,7 @@ class StatusInteractionController(private val accountID: String) {
 
         override fun onSuccess(result: Status) {
           runningReblogRequests.remove(status.id)
-          post(StatusCountersUpdatedEvent(result))
+          post(StatusCountersUpdatedEvent(result, CounterType.REBLOGS))
         }
 
         override fun onError(error: ErrorResponse) {
@@ -68,7 +69,7 @@ class StatusInteractionController(private val accountID: String) {
           status.reblogged = !reblogged
           if (reblogged) status.reblogsCount--
           else status.reblogsCount++
-          post(StatusCountersUpdatedEvent(status))
+          post(StatusCountersUpdatedEvent(status, CounterType.REBLOGS))
         }
       })
       .exec(accountID) as SetStatusReblogged
@@ -78,7 +79,7 @@ class StatusInteractionController(private val accountID: String) {
     if (reblogged) status.reblogsCount++
     else status.reblogsCount--
 
-    post(StatusCountersUpdatedEvent(status))
+    post(StatusCountersUpdatedEvent(status, CounterType.REBLOGS))
   }
 
   fun setBookmarked(status: Status, bookmarked: Boolean) {
@@ -91,14 +92,14 @@ class StatusInteractionController(private val accountID: String) {
 
         override fun onSuccess(result: Status) {
           runningBookmarkRequests.remove(status.id)
-          post(StatusCountersUpdatedEvent(result))
+          post(StatusCountersUpdatedEvent(result, CounterType.BOOKMARKS))
         }
 
         override fun onError(error: ErrorResponse) {
           runningBookmarkRequests.remove(status.id)
           error.showToast(MastodonApp.context)
           status.bookmarked = !bookmarked
-          post(StatusCountersUpdatedEvent(status))
+          post(StatusCountersUpdatedEvent(status, CounterType.BOOKMARKS))
         }
       })
       .exec(accountID) as SetStatusBookmarked
@@ -106,6 +107,6 @@ class StatusInteractionController(private val accountID: String) {
     runningBookmarkRequests.put(status.id, request)
     status.bookmarked = bookmarked
 
-    post(StatusCountersUpdatedEvent(status))
+    post(StatusCountersUpdatedEvent(status, CounterType.BOOKMARKS))
   }
 }

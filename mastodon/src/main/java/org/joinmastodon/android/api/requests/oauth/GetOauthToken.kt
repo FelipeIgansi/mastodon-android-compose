@@ -2,8 +2,8 @@ package org.joinmastodon.android.api.requests.oauth
 
 import com.google.gson.annotations.SerializedName
 import org.joinmastodon.android.api.MastodonAPIRequest
-import org.joinmastodon.android.api.session.AccountSessionManager.Companion.SCOPE
 import org.joinmastodon.android.api.session.AccountSessionManager.Companion.REDIRECT_URI
+import org.joinmastodon.android.api.session.AccountSessionManager.Companion.SCOPE
 import org.joinmastodon.android.model.Token
 
 class GetOauthToken(
@@ -11,18 +11,21 @@ class GetOauthToken(
   clientSecret: String,
   code: String?,
   grantType: GrantType
-) :  MastodonAPIRequest<Token>(
-    method = HttpMethod.POST,
-    path = "/oauth/token",
-    respClass = Token::class.java
-  ) {
+) : MastodonAPIRequest<Token>(
+  method = HttpMethod.POST,
+  path = "/oauth/token",
+  respClass = Token::class.java
+) {
   init {
+    val isClientCredentialsGrant = GrantType.CLIENT_CREDENTIALS == grantType
     setRequestBody(
       Request(
-        clientID,
-        clientSecret,
-        code,
-        grantType
+        clientId = clientID,
+        clientSecret = clientSecret,
+        code = code,
+        grantType = grantType,
+        scope = if (isClientCredentialsGrant) SCOPE else null,
+        redirectUri = if (isClientCredentialsGrant) null else REDIRECT_URI
       )
     )
   }
@@ -34,8 +37,8 @@ class GetOauthToken(
     val clientSecret: String,
     val code: String?,
     val grantType: GrantType,
-    val redirectUri: String = REDIRECT_URI,
-    val scope: String = SCOPE
+    val redirectUri: String?,
+    val scope: String?
   )
 
   enum class GrantType {

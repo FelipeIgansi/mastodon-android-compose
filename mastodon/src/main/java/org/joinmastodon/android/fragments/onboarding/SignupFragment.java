@@ -43,6 +43,7 @@ import org.jsoup.select.NodeVisitor;
 import org.parceler.Parcels;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -82,6 +83,8 @@ public class SignupFragment extends ToolbarFragment{
 	private HashSet<EditText> errorFields=new HashSet<>();
 	private ElevationOnScrollListener onScrollListener;
 	private Set<String> serverSupportedTimezones, serverSupportedLocales;
+	private LocalDate birthDate;
+	private boolean birthDateRequired;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState){
@@ -229,7 +232,16 @@ public class SignupFragment extends ToolbarFragment{
 
 		String inviteCode=getArguments().getString("inviteCode");
 
-		new RegisterAccount(username, email, password.getText().toString(), locale, reason.getText().toString(), timezone, inviteCode)
+		new RegisterAccount(
+				username,
+				email,
+				password.getText().toString(),
+				locale,
+				reason.getText().toString(),
+				timezone,
+				inviteCode,
+				null // temporary value
+		)
 				.setCallback(new Callback<>(){
 					@Override
 					public void onSuccess(Token result){

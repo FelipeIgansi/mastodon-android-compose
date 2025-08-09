@@ -11,8 +11,10 @@ import me.grishka.appkit.api.Callback
 import me.grishka.appkit.api.ErrorResponse
 import org.joinmastodon.android.BuildConfig
 import org.joinmastodon.android.MastodonApp
+import org.joinmastodon.android.api.MastodonAPIController.Companion.runInBackground
 import org.joinmastodon.android.api.requests.notifications.RegisterForPushNotifications
 import org.joinmastodon.android.api.requests.notifications.UpdatePushSettings
+import org.joinmastodon.android.api.session.AccountSession
 import org.joinmastodon.android.api.session.AccountSessionManager
 import org.joinmastodon.android.model.PushNotification
 import org.joinmastodon.android.model.PushSubscription
@@ -172,7 +174,7 @@ class PushSubscriptionManager(private val accountID: String) {
 
       AccountSessionManager.instance.loggedInAccounts.forEach { session ->
         when {
-          session.pushSubscription == null || forceReRegister -> {
+          session.pushSubscription == null || forceReRegister || session.needReRegisterForPush -> {
             session.pushSubscriptionManager.registerAccountForPush(session.pushSubscription)
           }
 
@@ -184,109 +186,135 @@ class PushSubscriptionManager(private val accountID: String) {
     }
   }
 
+  private fun loadKeys(session: AccountSession): Boolean {
+    try {
+      val kf = KeyFactory.getInstance("EC")
+      val flag = Base64.URL_SAFE
+
+      privateKey = kf.generatePrivate(
+        PKCS8EncodedKeySpec(
+          Base64.decode(session.pushPrivateKey, flag)
+        )
+      )
+      publicKey = kf.generatePublic(
+        X509EncodedKeySpec(
+          Base64.decode(session.pushPublicKey, flag)
+        )
+      )
+      authKey = Base64.decode(session.pushAuthKey, flag)
+
+      return true
+    } catch (exception: Exception) {
+      when (exception) {
+        is NoSuchAlgorithmException,
+        is InvalidKeySpecException -> Log.e(TAG, "Error loading private key", exception)
+      }
+      return false
+    }
+  }
 
   fun registerAccountForPush(subscription: PushSubscription?) {
     require(!deviceToken.isNullOrEmpty()) { "No device push token available" }
 
-    MastodonAPIController.runInBackground {
+    runInBackground(Runnable {
       Log.d(TAG, "registerAccountForPush: started for $accountID")
 
-      val encodedKeys = try {
-        val generator = KeyPairGenerator.getInstance("EC")
-        val spec = ECGenParameterSpec(EC_CURVE_NAME)
-        generator.initialize(spec)
+      var encodedAuthKey = ""
+      var pushAccountID = ""
 
-        val keyPair = generator.generateKeyPair()
-        publicKey = keyPair.public
-        privateKey = keyPair.private
+      val session = AccountSessionManager.instance.tryGetAccount(accountID) ?: AccountSession()
 
-        val flags = Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
-        val encodedPublicKey = publicKey?.let { key ->
-          Base64.encodeToString(
-            serializeRawPublicKey(key),
-            flags
-          )
-        } ?: ""
+      val flags = Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
 
-        authKey = ByteArray(16)
-        SecureRandom().nextBytes(authKey)
+      if (session.hasPushCredentials) {
 
-        val randomAccountID = ByteArray(16)
-        SecureRandom().nextBytes(randomAccountID)
+        if (!loadKeys(session)) return@Runnable
+        session.pushAuthKey?.let { encodedAuthKey = it }
+        session.pushAccountID?.let { pushAccountID = it }
 
-        val encodedPrivateKey = privateKey?.let { key ->
-          Base64.encodeToString(
-            key.encoded,
-            flags
-          )
-        } ?: ""
+      } else {
 
-        val encodedAuthKey = authKey?.let { key ->
-          Base64.encodeToString(
-            key,
-            flags
-          )
-        } ?: ""
+        try {
+          val generator = KeyPairGenerator.getInstance("EC")
+          val spec = ECGenParameterSpec(EC_CURVE_NAME)
+          generator.initialize(spec)
 
-        val pushAccountID = Base64.encodeToString(
-          randomAccountID,
-          flags
-        ) ?: ""
+          val keyPair = generator.generateKeyPair()
+          publicKey = keyPair.public
+          privateKey = keyPair.private
+          authKey = ByteArray(16)
 
-        EncodedKeys(encodedPublicKey, encodedPrivateKey, encodedAuthKey, pushAccountID)
+          val secureRandom = SecureRandom()
+          secureRandom.nextBytes(authKey)
 
-      } catch (exception: Exception) {
-        when (exception) {
-          is NoSuchAlgorithmException, is InvalidAlgorithmParameterException -> {
-            Log.e(TAG, "registerAccountForPush: error generating encryption key", exception)
+          val randomAccountID = ByteArray(16)
+          secureRandom.nextBytes(randomAccountID)
+
+          session.pushPrivateKey = privateKey?.let { key ->
+            Base64.encodeToString(key.encoded, flags)
+          } ?: ""
+
+          session.pushPublicKey = publicKey?.let { key ->
+            Base64.encodeToString(key.encoded, flags)
+          } ?: ""
+
+          encodedAuthKey = authKey?.let { key ->
+            Base64.encodeToString(key, flags)
+          } ?: ""
+
+          session.pushAuthKey = encodedAuthKey
+
+          pushAccountID = Base64.encodeToString(randomAccountID, flags) ?: ""
+
+          session.pushAccountID = pushAccountID
+          AccountSessionManager.instance.writeAccountPushSettings(accountID)
+
+        } catch (exception: Exception) {
+
+          when (exception) {
+            is NoSuchAlgorithmException,
+            is InvalidAlgorithmParameterException -> {
+              Log.e(TAG, "registerAccountForPush: error generating encryption key", exception)
+            }
           }
+
+          return@Runnable
         }
-        return@runInBackground
       }
+      val encodedPublicKey = publicKey?.let {
+        Base64.encodeToString(serializeRawPublicKey(it), flags)
+      } ?: ""
 
-      val session = AccountSessionManager.instance.tryGetAccount(accountID)
-        ?: return@runInBackground
-
-      with(session) {
-        pushPrivateKey = encodedKeys.privateKey
-        pushPublicKey = encodedKeys.publicKey
-        pushAuthKey = encodedKeys.authKey
-        pushAccountID = encodedKeys.accountID
-      }
-
+      session.needReRegisterForPush = true
       AccountSessionManager.instance.writeAccountPushSettings(accountID)
 
       RegisterForPushNotifications(
-        deviceToken!!,
-        encodedKeys.publicKey,
-        encodedKeys.authKey,
+        deviceToken ?: "",
+        encodedPublicKey,
+        encodedAuthKey,
         subscription?.alerts ?: PushSubscription.Alerts.ofAll(),
         subscription?.policy ?: PushSubscription.Policy.ALL,
-        encodedKeys.accountID
-      ).setCallback(object : Callback<PushSubscription> {
-        override fun onSuccess(result: PushSubscription) {
-          MastodonAPIController.runInBackground {
-            AccountSessionManager.instance.tryGetAccount(accountID)?.let { session ->
+        pushAccountID
+      )
+        .setCallback(object : Callback<PushSubscription> {
+
+          override fun onSuccess(result: PushSubscription) {
+            runInBackground {
+              val session = AccountSessionManager.instance.tryGetAccount(accountID) ?: AccountSession()
               session.pushSubscription = result
+              session.needReRegisterForPush = false
               AccountSessionManager.instance.writeAccountPushSettings(accountID)
               Log.d(TAG, "Successfully registered $accountID for push notifications")
             }
           }
-        }
 
-        override fun onError(error: ErrorResponse) {
-          Log.w(TAG, "Failed to register account for push: $error")
-        }
-      }).exec(accountID)
-    }
+          override fun onError(error: ErrorResponse) {
+          }
+
+        })
+        .exec(accountID)
+    })
   }
-
-  private data class EncodedKeys(
-    val publicKey: String,
-    val privateKey: String,
-    val authKey: String,
-    val accountID: String
-  )
 
 
   fun updatePushSettings(subscription: PushSubscription) {
@@ -363,23 +391,8 @@ class PushSubscriptionManager(private val accountID: String) {
     val serverKey = deserializeRawPublicKey(serverKeyBytes) ?: return null
 
     if (privateKey == null) {
-      try {
-        val kf = KeyFactory.getInstance("EC")
-        val account = AccountSessionManager.instance.getAccount(accountID)
-        val flag = Base64.URL_SAFE
-
-        privateKey = kf.generatePrivate(PKCS8EncodedKeySpec(Base64.decode(account.pushPrivateKey, flag)))
-        publicKey = kf.generatePublic(X509EncodedKeySpec(Base64.decode(account.pushPublicKey, flag)))
-        authKey = Base64.decode(account.pushAuthKey, flag)
-      } catch (exception: Exception) {
-        when (exception) {
-          is NoSuchAlgorithmException,
-          is InvalidKeySpecException -> {
-            Log.e(TAG, "decryptNotification: error loading private key", exception)
-          }
-        }
+      if (!loadKeys(AccountSessionManager.instance.getAccount(accountID)))
         return null
-      }
     }
 
     val sharedSecret = try {

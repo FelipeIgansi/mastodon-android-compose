@@ -2,7 +2,10 @@
 
 package org.joinmastodon.android.api
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -26,6 +29,9 @@ import java.io.File
 import java.io.IOException
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.concurrent.TimeUnit
 
 
@@ -33,6 +39,8 @@ class MastodonAPIController(private val session: AccountSession?) {
 
   companion object {
     private const val TAG = "MastodonAPIController"
+
+    private val uiThreadHandler: Handler = Handler(Looper.getMainLooper())
 
     @JvmField
     var gson: Gson = GsonBuilder()
@@ -142,6 +150,38 @@ class MastodonAPIController(private val session: AccountSession?) {
 
             synchronized(req) {
               req.okhttpCall = null
+            }
+
+            if (BuildConfig.DEBUG) {
+              val deprecationHeader = response.header("Deprecation")
+              if (deprecationHeader != null && deprecationHeader.startsWith("@")) {
+                try {
+                  val date = Instant.ofEpochSecond(deprecationHeader.substring(1).toLong())
+                  val msg = buildString {
+                    append(hreq.url.encodedPath)
+                    append(
+                      if (date.isAfter(Instant.now())) " will be deprecated on "
+                      else " is deprecated as of "
+                    )
+                    append(
+                      date.atZone(ZoneId.systemDefault())
+                        .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+                    )
+                  }
+
+                  Log.w(TAG, "${logTag(session)}$msg")
+                  val finalMsg = msg
+
+                  uiThreadHandler.post {
+                    Toast.makeText(
+                      MastodonApp.context,
+                      finalMsg,
+                      Toast.LENGTH_SHORT
+                    ).show()
+                  }
+                } catch (ignored: NumberFormatException) {
+                }
+              }
             }
 
             try {
